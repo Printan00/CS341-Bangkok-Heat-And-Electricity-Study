@@ -91,7 +91,8 @@ README.md                      ภาพรวมโครงการ (ไฟ�
 architecture/                  Architecture diagram (.drawio.svg ต้นฉบับ + .png) และวิธีแก้ไข
 reports/                       data dictionary และรายการตัวแปร (เฉพาะค่ารวม ไม่มีข้อมูลรายแถว)
 scripts/profile_codebook.py    สคริปต์ตรวจ codebook รันซ้ำได้
-infra/terraform/               Terraform ของทรัพยากร AWS ทั้งหมด (S3 ตอนนี้, IAM/Step Functions/Glue/Athena ตามมา)
+infra/terraform/               Terraform ของทรัพยากร AWS ทั้งหมด (S3, IAM, Lambda, Step Functions, Glue, Athena)
+lambdas/<step>/handler.py      โค้ด Lambda แต่ละขั้น (ตอนนี้เป็น stub รอ #19–#22) แก้แล้ว terraform apply เพื่อ deploy
 Docs/                          Proposal และแผนแก้ไข (ไฟล์อื่นใน Docs/ ไม่ track)
 data/                          ข้อมูลสำรวจดิบ (ในเครื่องเท่านั้น อยู่ใน .gitignore)
 ```
@@ -122,6 +123,13 @@ Region: `ap-southeast-1` (Singapore) ต้องตั้ง AWS CLI credential
 | `bhes-glue-crawler` (role) | Glue Crawler | อ่าน `curated/` อย่างเดียว |
 | `bhes-athena-query` (policy) | ผู้ใช้ / QuickSight ที่จะ query | Athena workgroup `bhes-*`, อ่าน Glue catalog + `curated/`, เขียนผลลง athena-results bucket |
 
+| Pipeline | ชื่อ |
+|---|---|
+| Lambda (1 ตัวต่อขั้น, log อยู่ CloudWatch `/aws/lambda/<ชื่อ>`) | `bhes-check-batch`, `bhes-validate`, `bhes-transform`, `bhes-integrate`, `bhes-verify` |
+| Step Functions | `bhes-pipeline`: CheckBatch → AlreadyDone? → Validate → Valid? → Transform → Integrate → Verify |
+| Glue | database `bhes`, crawler `bhes-curated` (1 โฟลเดอร์ใต้ `curated/` = 1 ตาราง) |
+| Athena | workgroup `bhes-wg` (จำกัด 1 GB ต่อ query) |
+
 **ครั้งแรกเท่านั้น: สร้าง bucket สำหรับ state** (ทำแล้วสำหรับ account ของทีม)
 ```bash
 B=bhes-tfstate-<account_id>; R=ap-southeast-1
@@ -136,6 +144,15 @@ terraform -chdir=infra/terraform init
 terraform -chdir=infra/terraform plan
 terraform -chdir=infra/terraform apply
 ```
+
+**รัน pipeline 1 batch / crawl / query**
+```bash
+export AWS_DEFAULT_REGION=ap-southeast-1
+aws stepfunctions start-execution --state-machine-arn arn:aws:states:ap-southeast-1:<account_id>:stateMachine:bhes-pipeline --input '{"batch_id":"2026-11-11-001"}'
+aws glue start-crawler --name bhes-curated
+aws athena start-query-execution --work-group bhes-wg --query-execution-context Database=bhes --query-string 'SELECT ...'
+```
+ทดสอบว่า workflow หยุดที่ขั้นที่ล้มเหลว: ใส่ `"fail_at":"transform"` ใน input (ใช้ได้เฉพาะ stub)
 
 **Destroy** bucket ต้องว่างก่อน (ไม่ได้เปิด `force_destroy` เพื่อกันข้อมูลหาย) lake bucket มี versioning จึงต้องลบทุก version ออกด้วย (ทำได้ใน S3 console ด้วยปุ่ม Empty)
 ```bash
