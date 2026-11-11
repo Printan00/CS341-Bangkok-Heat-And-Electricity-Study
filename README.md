@@ -28,39 +28,87 @@
 
 ### Social Vulnerability Survey (SoVI V8)
 - ปีที่สำรวจ: 2023
-- ประมาณ 500 ครัวเรือน จาก 17 ชุมชนในกรุงเทพฯ และปริมณฑล
+- 500 ครัวเรือน จาก 17 ชุมชนในกรุงเทพฯ และปริมณฑล
 - ข้อมูลรายได้ รายจ่าย ลักษณะบ้าน และความสามารถในการปรับตัว
 
 ### Happy Home / Nature-based Solutions Survey
 - ปีที่สำรวจ: 2026
-- ประมาณ 81 ครัวเรือน จาก 2 ชุมชนริมคลองเปรมประชากร เขตหลักสี่
+- 88 ครัวเรือน (ประกาศระบุ ~81) จาก 2 ชุมชนริมคลองเปรมประชากร เขตหลักสี่ สัมภาษณ์เดือนกรกฎาคม 2026
 - ข้อมูลลักษณะบ้าน ผลกระทบจากความร้อน การใช้พลังงาน และแนวทางปรับปรุงสภาพแวดล้อม
 
 ### Optional Data Sources
-- Landsat / GIS
+- Landsat / GIS (Earth Engine) ใช้ได้เฉพาะระดับชุมชน และจะตัดออกถ้าเชื่อมกับข้อมูลสำรวจไม่ได้
 - Climate and Heat Hazard Open Data
 
-## 5. Data Architecture
-สถาปัตยกรรมข้อมูลฉบับ Checkpoint (คลิกที่ภาพเพื่อดูขนาดเต็ม ไฟล์ต้นฉบับแก้ไขได้ใน draw.io: [architecture/bhes_architecture.drawio.svg](architecture/bhes_architecture.drawio.svg))
+> ข้อมูลสำรวจดิบ **ไม่อยู่ใน repo นี้** (repo เป็น public และข้อมูลไม่ผ่าน k-anonymity) เก็บในโฟลเดอร์ `data/` ในเครื่องเท่านั้น ซึ่งถูกตั้งไว้ใน `.gitignore` สมาชิกรับไฟล์จากช่องทางของวิชา
 
-[![BHES Data Architecture](architecture/bhes_architecture.png)](architecture/bhes_architecture.png)
+## 5. Data Architecture
+สถาปัตยกรรมข้อมูลฉบับ Checkpoint (คลิกที่ภาพเพื่อดูขนาดเต็ม ไฟล์ต้นฉบับแก้ไขได้ใน draw.io: [architecture/bhes_architecture_v2.drawio.svg](architecture/bhes_architecture_v2.drawio.svg))
+
+[![BHES Data Architecture](architecture/bhes_architecture_v2.png)](architecture/bhes_architecture_v2.png)
 
 ### เส้นทางของข้อมูล (อ่านตามเลขในภาพ)
-`แบบสำรวจ (xlsx)` → **Ingest** → **Raw** → **Validate** → (ไม่ผ่าน → **Quarantine**) → **Transform** → **Trusted** → **Integrate** → **Curated** → **Verify** → **DuckDB + SQL** → รายงานหลักฐาน (และ QuickSight เป็นทางเลือก)
+`แบบสำรวจ (xlsx)` → **Ingest** → **Raw** → **Validate** → (ไม่ผ่าน → **Quarantine**) → **Transform** → **Trusted** → **Integrate** → **Curated** → **Verify** → **Glue Data Catalog + Athena (SQL)** → Evidence report (และ QuickSight เป็นทางเลือก)
 
-| Zone | เก็บอะไร | หลักการ |
+| ส่วน | บริการ | หน้าที่ |
 |---|---|---|
-| Raw (S3) | ไฟล์ต้นฉบับทุกครั้งที่มาถึง | ไม่เขียนทับ จำกัดสิทธิ์เข้าถึง (arrival ≠ acceptance) |
-| Quarantine (S3) | แถวที่ไม่ผ่าน Validate พร้อมรายงานเหตุผล | ไม่ลบทิ้ง เพื่อให้ตรวจย้อนหลังได้ |
-| Trusted (S3, Parquet) | ข้อมูลที่ผ่านการตรวจและจัดโครงสร้างแล้ว | รหัสครัวเรือนนามแฝง ตัดพิกัด/ชื่อออก |
-| Curated (S3, Parquet) | ตารางวิเคราะห์ตอบ Q1–Q3 | เทียบระดับกลุ่ม พร้อม lineage (batch_id, source) |
-| Serving | DuckDB + SQL, Evidence report, QuickSight (ทางเลือก) | รายงาน n และค่าสูญหาย ซ่อนเซลล์ n < 5 |
+| Ingest | AWS CLI + Python | อัปโหลดไฟล์เข้า S3 พร้อม batch_id, source, วันที่ ไม่เขียนทับต้นฉบับ |
+| Orchestration | AWS Step Functions + Lambda | CheckBatch → Validate → Transform → Integrate → Verify ต่อ batch |
+| Raw (S3) | Amazon S3 | เก็บไฟล์ต้นฉบับทุกครั้งที่มาถึง จำกัดสิทธิ์เข้าถึง (arrival ≠ acceptance) |
+| Quarantine (S3) | Amazon S3 | แถวที่ไม่ผ่าน Validate พร้อมรายงานเหตุผล ไม่ลบทิ้ง |
+| Trusted (S3, Parquet) | Amazon S3 | ข้อมูลที่ผ่านการตรวจแล้ว รหัสครัวเรือนนามแฝง ตัดพิกัด/ชื่อออก |
+| Curated (S3, Parquet) | Amazon S3 | ตารางวิเคราะห์ตอบ Q1–Q3 เทียบระดับกลุ่ม พร้อม lineage (batch_id, source) |
+| Query layer | AWS Glue (Crawler + Data Catalog) + Amazon Athena | สร้างตารางจาก Parquet ใน S3 แล้ว query ด้วย SQL (ตาม Module 03–04) จ่ายตามข้อมูลที่สแกน |
+| Dashboard (ทางเลือก) | Amazon QuickSight | ใช้ Athena เป็นแหล่งข้อมูล เห็นเฉพาะตารางสรุปกลุ่ม n ≥ 5 (เส้นประในภาพ) |
+| Security & operations | IAM, CloudWatch | สิทธิ์น้อยที่สุด, run log และรายงานตรวจคุณภาพ |
+| IaC | Terraform (จาก GitHub repo) | สร้างทรัพยากรทั้งหมดให้รันซ้ำได้ |
 
 ### หลักการออกแบบ
 - **Validate ก่อน Transform:** ข้อมูลที่ยังไม่ผ่านการตรวจจะไม่ถูกแปลง
 - **รันซ้ำได้:** CheckBatch ดู `_SUCCESS.json` ถ้า batch นี้ประมวลผลแล้วจะหยุด ไม่เกิดข้อมูลซ้ำ
 - **รันสำเร็จ ≠ ข้อมูลถูกต้อง:** ขั้น Verify ตรวจจำนวนแถว ฟิลด์บังคับ schema และยอดรวมก่อนเขียน `_SUCCESS.json`
-- **ความเป็นส่วนตัว:** repo เป็น public จึงไม่มีข้อมูลดิบบน GitHub (`data/` อยู่ใน `.gitignore`) และรายงานซ่อนเซลล์ n < 5
+- **ความเป็นส่วนตัว:** repo เป็น public จึงไม่มีข้อมูลดิบบน GitHub และรายงานซ่อนเซลล์ n < 5
+- **ไม่ join สองชุดสำรวจรายครัวเรือน:** ต่างปี ต่างพื้นที่ ต่างชั้นรายได้ จึงเทียบระดับกลุ่ม
 
-### สถานะ
-ภาพนี้เป็นดีไซน์เป้าหมายของ Checkpoint ส่วนที่ทำแล้วคือการตรวจ codebook และตัวแปร ([reports/data_dictionary.md](reports/data_dictionary.md), [scripts/profile_codebook.py](scripts/profile_codebook.py)) ส่วนที่เหลือติดตามในการ์ด Issues ของ repo ปรับภาพเมื่อ pipeline จริงเปลี่ยน
+### ข้อควรรู้เรื่อง AWS
+- ยังไม่ได้ล็อก Region: Thailand (`ap-southeast-7`) มี S3, Lambda, Step Functions, Glue, Athena และ CloudWatch แต่ **ไม่มี QuickSight** ถ้าจะใช้ dashboard ต้องใช้ Region ที่รองรับ (เช่น Singapore) ทุกคนในทีมต้องตั้ง Region เดียวกัน
+- Athena และ QuickSight มีค่าใช้จ่าย ควรตั้ง Budget alert และเช็กราคาก่อนใช้
+- ไม่ใช้ root access key ในงานประจำ และห้ามเก็บ access key หรือ `*.tfstate` ใน repo
+
+## 6. ข้อค้นพบจากการตรวจข้อมูล
+ผลตรวจ codebook (การ์ด #14) รายละเอียดเต็มอยู่ใน [reports/data_dictionary.md](reports/data_dictionary.md)
+
+- **Q1/Q2 ตอบจาก Happy Home ชุดเดียว** SoVI ไม่มีค่าไฟ เครื่องใช้ไฟฟ้า หรือตัวแปรความร้อน (ครอบคลุมน้ำท่วมและภัยแล้ง) จึงใช้เป็นบริบทของ Q3
+- **ความร้อนแยกจากน้ำท่วมได้ในโครงสร้างแบบสอบถาม** แต่คำตอบของสองภัยสอดคล้องกันมาก แยกเชิงสถิติได้ยาก
+- **รายได้และค่าไฟเป็นช่วง (band) รายเดือน** จึงรายงานภาระค่าไฟเป็นช่วงต่ำสุด–สูงสุด ไม่ใช่ค่าเดียว
+- Happy Home มี **88 แถว** (ไม่ใช่ ~81) ชื่อชุมชนมี 16 รูปแบบ (จริง 2 ชุมชน) ต้อง normalise
+- Happy Home **มีพิกัดครัวเรือน** (ปัด ≈100 ม.) ต้องตัดออกก่อนเข้า Trusted และห้ามเผยแพร่
+- Q1 ตัวแปรอธิบายแปรผันน้อย (เช่น ไม่มีฉนวน 81/88) ผลอาจออกมาเป็น "ยังไม่เพียงพอ" ซึ่งยอมรับได้ตามสเปก
+
+## 7. โครงสร้าง repo
+```
+README.md                      ภาพรวมโครงการ (ไฟล์นี้)
+architecture/                  Architecture diagram (.drawio.svg ต้นฉบับ + .png) และวิธีแก้ไข
+reports/                       data dictionary และรายการตัวแปร (เฉพาะค่ารวม ไม่มีข้อมูลรายแถว)
+scripts/profile_codebook.py    สคริปต์ตรวจ codebook รันซ้ำได้
+Docs/                          Proposal และแผนแก้ไข (ไฟล์อื่นใน Docs/ ไม่ track)
+data/                          ข้อมูลสำรวจดิบ (ในเครื่องเท่านั้น อยู่ใน .gitignore)
+```
+
+## 8. วิธีรันสคริปต์ตรวจ codebook
+ต้องวางไฟล์ข้อมูลที่ได้รับจากอาจารย์ไว้ที่ `data/` ก่อน
+```bash
+python -m venv .venv && .venv/bin/pip install -r scripts/requirements.txt
+.venv/bin/python scripts/profile_codebook.py --data-dir data --out reports
+```
+ผลลัพธ์เป็นค่ารวมเท่านั้น (เซลล์ n < 5 แสดงเป็น `<5` ไม่มีพิกัดหรือรหัสครัวเรือน)
+
+## 9. สถานะและการทำงาน
+| สถานะ | รายการ |
+|---|---|
+| ทำแล้ว | ข้อมูลสำรวจพร้อม (#13), ตรวจ codebook และ data dictionary (#14), Architecture diagram (#15) |
+| กำลังวางแผน | Terraform S3/IAM (#16), Ingestion (#18), Validate + Quarantine (#19), Transform → Trusted (#20), Idempotency (#21), Verify (#22), ตรวจการเชื่อม GEE (#23), นิยามตัวชี้วัด + SQL บน Athena (#24), QuickSight (#33, ทางเลือก), README และบันทึกการใช้ AI (#27), เตรียม Demo (#28) |
+
+- ภาพ Architecture เป็นดีไซน์เป้าหมายของ Checkpoint ถ้าตอนสร้างจริงต่างจากภาพ ให้แก้ภาพตาม
+- งานติดตามใน GitHub Issues และ Project board ของ repo
+- Git flow: สร้าง branch → Pull Request เข้า `dev` → `dev` → `main`
