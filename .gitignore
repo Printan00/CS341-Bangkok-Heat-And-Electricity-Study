@@ -16,3 +16,6 @@ data/
 crash.log
 tfplan
 .build/
+
+# Python: bytecode from test runs would otherwise be zipped into the Lambda packages
+__pycache__/
