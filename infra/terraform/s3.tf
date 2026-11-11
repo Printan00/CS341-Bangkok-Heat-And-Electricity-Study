@@ -39,7 +39,7 @@ resource "aws_s3_bucket_public_access_block" "athena_results" {
 
 # Empty "folder" markers so the zones are visible in the S3 console before any data arrives
 resource "aws_s3_object" "lake_zones" {
-  for_each = toset(["raw", "quarantine", "trusted", "curated"])
+  for_each = toset(["incoming", "raw", "quarantine", "trusted", "curated"])
   bucket   = aws_s3_bucket.lake.id
   key      = "${each.key}/"
   content  = ""

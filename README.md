@@ -91,6 +91,7 @@ README.md                      ภาพรวมโครงการ (ไฟ�
 architecture/                  Architecture diagram (.drawio.svg ต้นฉบับ + .png) และวิธีแก้ไข
 reports/                       data dictionary และรายการตัวแปร (เฉพาะค่ารวม ไม่มีข้อมูลรายแถว)
 scripts/profile_codebook.py    สคริปต์ตรวจ codebook รันซ้ำได้
+scripts/ingest.py              นำไฟล์จาก data/ เข้า S3 raw/ พร้อม metadata (รันซ้ำไม่เกิดข้อมูลซ้ำ)
 infra/terraform/               Terraform ของทรัพยากร AWS ทั้งหมด (S3, IAM, Lambda, Step Functions, Glue, Athena)
 lambdas/<step>/handler.py      โค้ด Lambda แต่ละขั้น (ตอนนี้เป็น stub รอ #19–#22) แก้แล้ว terraform apply เพื่อ deploy
 Docs/                          Proposal และแผนแก้ไข (ไฟล์อื่นใน Docs/ ไม่ track)
@@ -145,10 +146,18 @@ terraform -chdir=infra/terraform plan
 terraform -chdir=infra/terraform apply
 ```
 
-**รัน pipeline 1 batch / crawl / query**
+**Ingest ข้อมูลเข้า Raw** (วางไฟล์ xlsx ใน `data/` ก่อน) รันซ้ำได้ ไฟล์เดิมจะ SKIP ไม่ซ้ำ ไม่เขียนทับ
+```bash
+pip install -r scripts/requirements.txt
+python scripts/ingest.py --bucket $(terraform -chdir=infra/terraform output -raw lake_bucket)
+```
+ไฟล์ขึ้น `incoming/` ก่อน แล้ว copy เข้า `raw/<source>/<batch_id>/` พร้อม metadata (`batch_id`, `source`, `ingested_at`, `sha256`) และ `_manifest.json` (log การนำเข้า) จากนั้นลบออกจาก `incoming/`
+`batch_id` = `<source>-<sha256 12 ตัวแรก>` ไฟล์เนื้อหาเดิมได้ `batch_id` เดิมเสมอ
+
+**รัน pipeline 1 batch / crawl / query** (ใช้ `batch_id` ที่ ingest พิมพ์ออกมา)
 ```bash
 export AWS_DEFAULT_REGION=ap-southeast-1
-aws stepfunctions start-execution --state-machine-arn arn:aws:states:ap-southeast-1:<account_id>:stateMachine:bhes-pipeline --input '{"batch_id":"2026-11-11-001"}'
+aws stepfunctions start-execution --state-machine-arn arn:aws:states:ap-southeast-1:<account_id>:stateMachine:bhes-pipeline --input '{"batch_id":"happy_home-26cba344f87c"}'
 aws glue start-crawler --name bhes-curated
 aws athena start-query-execution --work-group bhes-wg --query-execution-context Database=bhes --query-string 'SELECT ...'
 ```
