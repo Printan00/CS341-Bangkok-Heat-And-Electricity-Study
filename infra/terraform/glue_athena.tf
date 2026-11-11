@@ -13,6 +13,8 @@ resource "aws_glue_crawler" "curated" {
 
   s3_target {
     path = "s3://${aws_s3_bucket.lake.bucket}/curated/"
+    # staging copies and _SUCCESS.json markers of the pipeline are not tables
+    exclusions = ["_pipeline/**"]
   }
 }
 
