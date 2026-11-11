@@ -39,3 +39,28 @@
 ### Optional Data Sources
 - Landsat / GIS
 - Climate and Heat Hazard Open Data
+
+## 5. Data Architecture
+สถาปัตยกรรมข้อมูลฉบับ Checkpoint (คลิกที่ภาพเพื่อดูขนาดเต็ม ไฟล์ต้นฉบับแก้ไขได้ใน draw.io: [architecture/bhes_architecture.drawio.svg](architecture/bhes_architecture.drawio.svg))
+
+[![BHES Data Architecture](architecture/bhes_architecture.png)](architecture/bhes_architecture.png)
+
+### เส้นทางของข้อมูล (อ่านตามเลขในภาพ)
+`แบบสำรวจ (xlsx)` → **Ingest** → **Raw** → **Validate** → (ไม่ผ่าน → **Quarantine**) → **Transform** → **Trusted** → **Integrate** → **Curated** → **Verify** → **DuckDB + SQL** → รายงานหลักฐาน (และ QuickSight เป็นทางเลือก)
+
+| Zone | เก็บอะไร | หลักการ |
+|---|---|---|
+| Raw (S3) | ไฟล์ต้นฉบับทุกครั้งที่มาถึง | ไม่เขียนทับ จำกัดสิทธิ์เข้าถึง (arrival ≠ acceptance) |
+| Quarantine (S3) | แถวที่ไม่ผ่าน Validate พร้อมรายงานเหตุผล | ไม่ลบทิ้ง เพื่อให้ตรวจย้อนหลังได้ |
+| Trusted (S3, Parquet) | ข้อมูลที่ผ่านการตรวจและจัดโครงสร้างแล้ว | รหัสครัวเรือนนามแฝง ตัดพิกัด/ชื่อออก |
+| Curated (S3, Parquet) | ตารางวิเคราะห์ตอบ Q1–Q3 | เทียบระดับกลุ่ม พร้อม lineage (batch_id, source) |
+| Serving | DuckDB + SQL, Evidence report, QuickSight (ทางเลือก) | รายงาน n และค่าสูญหาย ซ่อนเซลล์ n < 5 |
+
+### หลักการออกแบบ
+- **Validate ก่อน Transform:** ข้อมูลที่ยังไม่ผ่านการตรวจจะไม่ถูกแปลง
+- **รันซ้ำได้:** CheckBatch ดู `_SUCCESS.json` ถ้า batch นี้ประมวลผลแล้วจะหยุด ไม่เกิดข้อมูลซ้ำ
+- **รันสำเร็จ ≠ ข้อมูลถูกต้อง:** ขั้น Verify ตรวจจำนวนแถว ฟิลด์บังคับ schema และยอดรวมก่อนเขียน `_SUCCESS.json`
+- **ความเป็นส่วนตัว:** repo เป็น public จึงไม่มีข้อมูลดิบบน GitHub (`data/` อยู่ใน `.gitignore`) และรายงานซ่อนเซลล์ n < 5
+
+### สถานะ
+ภาพนี้เป็นดีไซน์เป้าหมายของ Checkpoint ส่วนที่ทำแล้วคือการตรวจ codebook และตัวแปร ([reports/data_dictionary.md](reports/data_dictionary.md), [scripts/profile_codebook.py](scripts/profile_codebook.py)) ส่วนที่เหลือติดตามในการ์ด Issues ของ repo ปรับภาพเมื่อ pipeline จริงเปลี่ยน
