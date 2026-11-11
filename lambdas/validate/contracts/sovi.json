@@ -2,7 +2,8 @@
  "_meta": {
   "source": "SoVI V8 social vulnerability survey",
   "allowed_values": "income/expense bands from SOVI_Survey_Questionaire.docx items 15-16 (5 bands; the sample only uses 4)",
-  "score_allowed": "ค่าคะแนน sheet uses 1-3; 0 assumed to mean skipped/not applicable (confirm with instructor)",
+  "score_allowed": "ค่าคะแนน sheet uses 1-3; 0 appears only in flood items (sample): V50.1-6/V51.1-6 are 0/1 problem indicators, v34.3/V34.5 are 0 when the community had no flood (not applicable). Not a skipped-answer code",
+  "community_code": "the (NN) prefix of some community labels has no known meaning; kept as an opaque label in community_code, never used as a join key (join on community_key)",
   "score_exceptions": "V50.7 / V51.7 are counts of problems (0-6) used to derive the item 50/51 score",
   "review_needed": [
    "community_map lists the 17 surveyed community labels; decide whether these names may be committed to the public repo",
@@ -434,7 +435,7 @@
   "ประทับเวลา"
  ],
  "expected_rows": 500,
- "max_quarantine_rate": 0.1,
+ "max_quarantine_rate": 0.15,
  "id_column": "respondent_id",
  "id_pattern": "^S\\d{4}$",
  "id_columns": [

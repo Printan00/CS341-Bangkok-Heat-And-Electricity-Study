@@ -83,6 +83,14 @@ def test_b06_too_many_quarantined_rows_fails_batch():
     assert r.status == "failed" and "B06" in rule_ids(r.batch_violations)
 
 
+def test_b06_real_contracts_allow_up_to_15_percent():
+    from core import load_contract, quarantine_rate_violation
+    for source in ("happy_home", "sovi"):
+        rate = load_contract(source)["max_quarantine_rate"]
+        assert quarantine_rate_violation(13, 88, rate) is None        # 14.8%
+        assert quarantine_rate_violation(14, 88, rate).rule_id == "B06"  # 15.9%
+
+
 def test_report_has_totals_and_per_rule_counts_with_no_ids_or_raw_values():
     rows = [["HH-000000", "หลังแฟลต"], ["HH-000001", "ลับมาก"], ["HH-000002", "หลังแฟลต"], ["HH-000003", "หลังแฟลต"]]
     rep = hh.validate(book(rows), contract(), batch_id="t").report()

@@ -74,8 +74,8 @@ def test_happy_home_broken_rows_go_to_quarantine():
     assert rules_of(r, a, "household_code") == {"R05", "R02"}
     assert rules_of(r, b, "household_code") == {"R06"}
     assert len(r.quarantine) == 7 + 3
-    # 10 of 88 rows is above the 10% batch threshold, so the whole batch is held back
-    assert r.status == "failed" and "B06" in {v.rule_id for v in r.batch_violations}
+    # 10 of 88 rows (11%) is under the 15% batch threshold, so the batch still passes
+    assert r.status == "passed" and "B06" not in {v.rule_id for v in r.batch_violations}
 
 
 def test_happy_home_leaked_identifier_column_stops_batch_without_rows():

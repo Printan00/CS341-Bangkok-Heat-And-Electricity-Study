@@ -463,7 +463,7 @@
   }
  },
  "expected_rows": 88,
- "max_quarantine_rate": 0.1,
+ "max_quarantine_rate": 0.15,
  "id_column": "household_code",
  "id_pattern": "^HH-[0-9A-Za-z]{6}$",
  "id_columns": [

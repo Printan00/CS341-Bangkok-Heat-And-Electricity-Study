@@ -63,7 +63,7 @@ def map_community(t, c):
 
 def check_community(t, c):
     return _f(t, c, [k is None for k in map_community(t, c)], "R03", "FAIL", c["community_column"],
-              "community_unmapped: label not in mapping table (possible third community, confirm with instructor)")
+              "community_unmapped: label not in mapping table (likely the third community มิตรประชา; kept out of analysis)")
 
 
 def check_required(t, c):
