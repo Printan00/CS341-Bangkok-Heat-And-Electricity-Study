@@ -1,0 +1,3 @@
+"housing_risk_group","n","n_low","pct_low","n_medium","pct_medium","n_high","pct_high","n_heat_missing","pct_heat_missing"
+"0-2","37","8","21.6","19","51.4","10","27.0","0","0.0"
+"3-5 (เสี่ยงสูง)","51","7","13.7","26","51.0","18","35.3","0","0.0"

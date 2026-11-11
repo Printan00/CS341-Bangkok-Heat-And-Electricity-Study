@@ -7,3 +7,16 @@ Docs/*
 
 # Survey data: never commit (public repo)
 data/
+
+# Terraform: never commit state, secrets, or provider cache
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+crash.log
+tfplan
+.build/
+
+# Python
+__pycache__/
+.venv/

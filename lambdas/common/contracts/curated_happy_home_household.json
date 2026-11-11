@@ -1,0 +1,338 @@
+{
+ "_meta": {
+  "table": "curated/happy_home_household/part-0.parquet",
+  "privacy": "allowlist: only these columns are written; no coordinates, names, interviewer codes or free text"
+ },
+ "forbidden_columns": [
+  "latitude",
+  "longitude",
+  "lat",
+  "lon",
+  "grid_id",
+  "interviewer_code",
+  "ชื่อชุมชน",
+  "_พิกัดครัวเรือน (ปักหมุด)_latitude",
+  "_พิกัดครัวเรือน (ปักหมุด)_longitude",
+  "ชื่อชุมชน"
+ ],
+ "columns": [
+  {
+   "name": "household_code",
+   "type": "string",
+   "nullable": false,
+   "description": "pseudonymous household id from the export (HMAC), never the real id"
+  },
+  {
+   "name": "community_key",
+   "type": "string",
+   "nullable": false,
+   "description": "T04 community after the name map, or 'unknown'"
+  },
+  {
+   "name": "community_source",
+   "type": "string",
+   "nullable": false,
+   "description": "T04 label = from the name map, unknown = name could not be mapped"
+  },
+  {
+   "name": "usable_q1",
+   "type": "bool",
+   "nullable": false,
+   "description": "T11 row can be used for Q1 (V07, V14)"
+  },
+  {
+   "name": "usable_q2",
+   "type": "bool",
+   "nullable": false,
+   "description": "T11 row can be used for Q2 (V07, V14)"
+  },
+  {
+   "name": "usable_q3",
+   "type": "bool",
+   "nullable": false,
+   "description": "T11 row can be used for Q3 (V07, V14)"
+  },
+  {
+   "name": "a7_income_band_clean",
+   "type": "string",
+   "nullable": true,
+   "description": "A7 for analysis: null when blank, not a questionnaire answer, or unsure (T02)"
+  },
+  {
+   "name": "income_ord",
+   "type": "int8",
+   "nullable": true,
+   "description": "T06 A7 band order 1-5"
+  },
+  {
+   "name": "income_min",
+   "type": "int32",
+   "nullable": true,
+   "description": "T06 A7 band lower bound (baht/month; open band floor 2,500 per D1)"
+  },
+  {
+   "name": "income_max",
+   "type": "int32",
+   "nullable": true,
+   "description": "T06 A7 band upper bound (open band cap 100,000 per D1)"
+  },
+  {
+   "name": "e1_1_bill_normal_band_clean",
+   "type": "string",
+   "nullable": true,
+   "description": "E1.1 for analysis: null when blank, not a questionnaire answer, or unsure (T02)"
+  },
+  {
+   "name": "e1_2_bill_summer_band_clean",
+   "type": "string",
+   "nullable": true,
+   "description": "E1.2 for analysis: null when blank, not a questionnaire answer, or unsure (T02)"
+  },
+  {
+   "name": "bill_summer_ord",
+   "type": "int8",
+   "nullable": true,
+   "description": "T06 E1.2 band order 1-5"
+  },
+  {
+   "name": "bill_summer_min",
+   "type": "int32",
+   "nullable": true,
+   "description": "T06 E1.2 lower bound (baht/month)"
+  },
+  {
+   "name": "bill_summer_max",
+   "type": "int32",
+   "nullable": true,
+   "description": "T06 E1.2 upper bound (open band cap 6,000 per D1)"
+  },
+  {
+   "name": "burden_min",
+   "type": "float64",
+   "nullable": true,
+   "description": "T07 summer bill_min / income_max"
+  },
+  {
+   "name": "burden_max",
+   "type": "float64",
+   "nullable": true,
+   "description": "T07 summer bill_max / income_min"
+  },
+  {
+   "name": "burden_class",
+   "type": "string",
+   "nullable": true,
+   "description": "T07 high / possibly_high / low at 10% (D2)"
+  },
+  {
+   "name": "burden_class_6pct",
+   "type": "string",
+   "nullable": true,
+   "description": "T07 sensitivity check at 6% (D2)"
+  },
+  {
+   "name": "has_aircon",
+   "type": "bool",
+   "nullable": true,
+   "description": "T08 E2.1 owns an air conditioner"
+  },
+  {
+   "name": "a14_tenure_clean",
+   "type": "string",
+   "nullable": true,
+   "description": "A14 for analysis: null when blank, not a questionnaire answer, or unsure (T02)"
+  },
+  {
+   "name": "b12_no_budget",
+   "type": "int8",
+   "nullable": true,
+   "description": "B12 option 'ไม่มีงบประมาณ' selected (1/0)"
+  },
+  {
+   "name": "c2_8_heat_retrofit_clean",
+   "type": "string",
+   "nullable": true,
+   "description": "C2.8 for analysis: null when blank, not a questionnaire answer, or unsure (T02)"
+  },
+  {
+   "name": "b1_housing_type_clean",
+   "type": "string",
+   "nullable": true,
+   "description": "B1 for analysis: null when blank, not a questionnaire answer, or unsure (T02)"
+  },
+  {
+   "name": "b3_wall_material_clean",
+   "type": "string",
+   "nullable": true,
+   "description": "B3 for analysis: null when blank, not a questionnaire answer, or unsure (T02)"
+  },
+  {
+   "name": "b4_roof_material_clean",
+   "type": "string",
+   "nullable": true,
+   "description": "B4 for analysis: null when blank, not a questionnaire answer, or unsure (T02)"
+  },
+  {
+   "name": "b6_ceiling_clean",
+   "type": "string",
+   "nullable": true,
+   "description": "B6 for analysis: null when blank, not a questionnaire answer, or unsure (T02)"
+  },
+  {
+   "name": "b7_insulation_clean",
+   "type": "string",
+   "nullable": true,
+   "description": "B7 for analysis: null when blank, not a questionnaire answer, or unsure (T02)"
+  },
+  {
+   "name": "b8_ventilation_clean",
+   "type": "string",
+   "nullable": true,
+   "description": "B8 for analysis: null when blank, not a questionnaire answer, or unsure (T02)"
+  },
+  {
+   "name": "b9_shade_clean",
+   "type": "string",
+   "nullable": true,
+   "description": "B9 for analysis: null when blank, not a questionnaire answer, or unsure (T02)"
+  },
+  {
+   "name": "c2_1_heat_level_clean",
+   "type": "string",
+   "nullable": true,
+   "description": "C2.1 for analysis: null when blank, not a questionnaire answer, or unsure (T02)"
+  },
+  {
+   "name": "household_size_band",
+   "type": "string",
+   "nullable": true,
+   "description": "T03 A12 as a band (a whole number is put into its band)"
+  },
+  {
+   "name": "e1_3_summer_bill_increase_clean",
+   "type": "string",
+   "nullable": true,
+   "description": "E1.3 for analysis: null when blank, not a questionnaire answer, or unsure (T02)"
+  },
+  {
+   "name": "e2_1_fan",
+   "type": "int8",
+   "nullable": true,
+   "description": "E2.1 option 'พัดลม' selected (1/0)"
+  },
+  {
+   "name": "b12_costly",
+   "type": "int8",
+   "nullable": true,
+   "description": "B12 option 'วัสดุ/ช่างมีราคาแพง' selected (1/0)"
+  },
+  {
+   "name": "b12_renter_no_say",
+   "type": "int8",
+   "nullable": true,
+   "description": "B12 option 'บ้านเช่า/ไม่มีสิทธิ์ตัดสินใจ' selected (1/0)"
+  },
+  {
+   "name": "b12_limited_space",
+   "type": "int8",
+   "nullable": true,
+   "description": "B12 option 'พื้นที่จำกัด' selected (1/0)"
+  },
+  {
+   "name": "b12_dont_know_how",
+   "type": "int8",
+   "nullable": true,
+   "description": "B12 option 'ไม่รู้จะปรับอย่างไร' selected (1/0)"
+  },
+  {
+   "name": "housing_heat_score",
+   "type": "int8",
+   "nullable": true,
+   "description": "T09 0-5; null when fewer than 4 of B4/B6/B7/B8/B9 answered clearly"
+  },
+  {
+   "name": "heat_impact_score",
+   "type": "int8",
+   "nullable": true,
+   "description": "T10 0-13"
+  },
+  {
+   "name": "heat_impact_level",
+   "type": "string",
+   "nullable": true,
+   "description": "T10/D6 low 0-4 / medium 5-7 / high 8-13"
+  },
+  {
+   "name": "coping_limit_score",
+   "type": "int8",
+   "nullable": true,
+   "description": "T10 0-6"
+  },
+  {
+   "name": "coping_limited",
+   "type": "bool",
+   "nullable": true,
+   "description": "T10/D6 coping_limit_score >= 3"
+  },
+  {
+   "name": "burden_score",
+   "type": "float64",
+   "nullable": true,
+   "description": "T13 high = 1, possibly_high = 0.5, low = 0"
+  },
+  {
+   "name": "risk_score",
+   "type": "float64",
+   "nullable": true,
+   "description": "T13 heat/13 + housing/5 + 2 x burden_score + coping/6 (D7); only usable_q3 rows"
+  },
+  {
+   "name": "risk_score_equal",
+   "type": "float64",
+   "nullable": true,
+   "description": "T13 same with every group x1 (reported next to risk_score)"
+  },
+  {
+   "name": "risk_rank",
+   "type": "int32",
+   "nullable": true,
+   "description": "T13 rank by risk_score, 1 = help first (ties share a rank)"
+  },
+  {
+   "name": "risk_rank_equal",
+   "type": "int32",
+   "nullable": true,
+   "description": "T13 rank by risk_score_equal"
+  },
+  {
+   "name": "dq_flags",
+   "type": "string",
+   "nullable": false,
+   "description": "WARN rule ids from Validate, comma separated ('' when none)"
+  },
+  {
+   "name": "source_dataset",
+   "type": "string",
+   "nullable": false,
+   "description": "T12 lineage: survey name"
+  },
+  {
+   "name": "batch_id",
+   "type": "string",
+   "nullable": false,
+   "description": "T12 lineage: ingest batch id"
+  },
+  {
+   "name": "source_file_sha256",
+   "type": "string",
+   "nullable": false,
+   "description": "T12 lineage: sha256 of the raw file"
+  },
+  {
+   "name": "source_row",
+   "type": "int32",
+   "nullable": false,
+   "description": "T12 lineage: row number in the raw sheet"
+  }
+ ]
+}
