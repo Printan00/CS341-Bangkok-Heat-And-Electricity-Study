@@ -84,7 +84,9 @@ SQL อยู่ใน [analytics/](analytics/) ผล CSV (ซ่อน n < 5 �
 | Q3 | **สนับสนุน** (กลุ่มที่ควรช่วยก่อน) / **ยังไม่เพียงพอ** (ปัจจัยปรับปรุงบ้าน) | 21 บ้านลำดับต้นคือรายได้ต่ำ + ภาระค่าไฟสูง ลำดับเหมือนกันทั้งน้ำหนักค่าไฟ ×2 และน้ำหนักเท่ากัน เคยปรับปรุงบ้านเพียง 11 หลัง |
 
 ผลทั้งหมดเป็นความสัมพันธ์ ไม่ใช่เหตุและผล (n = 88 จาก 2 ชุมชน คำตอบรายงานเองย้อนหลัง ทดสอบหลายครั้งโดยไม่ปรับค่า p)
-ผล Athena ตรวจซ้ำกับการคำนวณจากไฟล์ดิบด้วยโค้ดแยกจาก pipeline (`analytics/recheck_local.py`): เทียบ 174 เซลล์ ต่างกัน 0
+ผล Athena ตรวจซ้ำกับการคำนวณจากไฟล์ดิบด้วยโค้ดแยกจาก pipeline (`analytics/recheck_local.py`): เทียบ 198 เซลล์ที่แสดงอยู่ ต่างกัน 0
+
+**Dashboard (ไทย/อังกฤษ, 1 หน้าต่อคำถาม + heatmap 2 อัน):** เปิด [`dashboard/index.html`](dashboard/index.html) ในเบราว์เซอร์ได้เลย (ไฟล์เดียว ไม่ต้องติดตั้ง ต้องมีอินเทอร์เน็ตเพื่อโหลดฟอนต์) สร้างจากไฟล์ CSV ผล Athena ด้วย `python dashboard/build.py` ตัวเลขทุกตัวอ่านจาก CSV ไม่พิมพ์เอง แต่ละกราฟมีปุ่ม “ดู SQL” และ build จะหยุดถ้าพบจำนวน 1–4 บ้านในคอลัมน์จำนวน
 
 ---
 
@@ -290,6 +292,9 @@ scripts/
   ingest.py                        นำไฟล์จาก data/ เข้า S3 raw/ พร้อม metadata (รันซ้ำไม่เกิดข้อมูลซ้ำ)
   profile_codebook.py              ตรวจ codebook รันซ้ำได้
   gee_lst.py                       LST ระดับชุมชนจาก Landsat ผ่าน Earth Engine (ทางเลือก ต้อง authenticate ยังไม่ได้รันจริง)
+dashboard/
+  index.html                       หน้า dashboard ไฟล์เดียว (ผลลัพธ์ของ build.py)
+  template.html, build.py          เทมเพลตและสคริปต์สร้างหน้าจาก analytics/results/*.csv
 analytics/
   q1_*.sql q2_*.sql q3_*.sql       SQL บน Athena ตอบ Q1–Q3 (+ data_quality.sql)
   run_athena.py                    รันทุกคำสั่งและเก็บ CSV ต่อคำสั่ง
@@ -330,7 +335,8 @@ data/                              ข้อมูลสำรวจดิบ (�
 |---|---|
 | ทำแล้ว | ข้อมูลสำรวจ (#13), ตรวจ codebook (#14), Architecture diagram (#15), Terraform S3/IAM (#16) และ Step Functions/Lambda/Glue/Athena (#17), Ingestion (#18), Validate + Quarantine (#19), Transform → Trusted (#20), Idempotency (#21), Verify + เทสต์ (#22), ตรวจการเชื่อม SoVI/Happy Home/GEE (#23), Glue + Athena ตอบ Q1–Q3 (#24), แก้ Proposal (#26) |
 | กำลังทำ | README วิธีรัน + บันทึกการใช้ AI (#27), สไลด์และ Demo Checkpoint (#28) |
-| ทางเลือก ยังไม่เริ่ม | QuickSight dashboard (#33), รัน `scripts/gee_lst.py` จริง |
+| ทางเลือก ยังไม่เริ่ม | QuickSight (#33: มีค่าใช้จ่ายรายเดือน รอตัดสินใจ), รัน `scripts/gee_lst.py` จริง |
+| ทำแล้ว (PR) | Dashboard Q1–Q3 แบบ HTML ไฟล์เดียวจากผล Athena (`dashboard/`) |
 
 - ภาพ Architecture เป็นดีไซน์เป้าหมายของ Checkpoint ถ้าตอนสร้างจริงต่างจากภาพ ให้แก้ภาพตาม
 - งานติดตามใน GitHub Issues และ Project board ของ repo

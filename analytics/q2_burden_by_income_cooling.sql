@@ -383,3 +383,24 @@ SELECT income_group,
   CASE WHEN (NOT sup AND NOT (c_high BETWEEN 1 AND 4 OR c_possibly_high BETWEEN 1 AND 4 OR c_low BETWEEN 1 AND 4 OR c_burden_missing BETWEEN 1 AND 4)) THEN CAST(ROUND(100.0 * c_burden_missing / n, 1) AS varchar) ELSE '<5' END AS pct_burden_missing
 FROM flagged
 ORDER BY income_group;
+
+-- Q2.12 Heatmap: ชั้นรายได้ 3 กลุ่ม x ค่าไฟหน้าร้อน 2 ช่วง (E1.2) -> จำนวนครัวเรือนและ % ของกลุ่มรายได้
+-- ทุกช่องมี 8 บ้านขึ้นไป; ช่องที่ n < 5 แสดงเป็น '<5'
+WITH base AS (
+  SELECT
+    CASE WHEN income_ord IS NULL THEN '(null)' WHEN income_ord <= 2 THEN '1) ไม่เกิน 10,000'
+         WHEN income_ord = 3 THEN '2) 10,001-20,000' ELSE '3) มากกว่า 20,000' END AS income_group,
+    CASE WHEN bill_summer_ord IS NULL THEN '(null)' WHEN bill_summer_ord <= 3 THEN '1) ไม่เกิน 2,000'
+         ELSE '2) มากกว่า 2,000' END AS bill_group
+  FROM bhes.happy_home_household
+  WHERE usable_q2
+), cells AS (
+  SELECT income_group, bill_group, count(*) AS n FROM base GROUP BY 1, 2
+), tot AS (
+  SELECT income_group, sum(n) AS t FROM cells GROUP BY 1
+)
+SELECT c.income_group, c.bill_group,
+  CASE WHEN c.n >= 5 THEN CAST(c.n AS varchar) ELSE '<5' END AS n,
+  CASE WHEN c.n >= 5 THEN CAST(ROUND(100.0 * c.n / t.t, 1) AS varchar) ELSE '<5' END AS pct_of_income_group
+FROM cells c JOIN tot t ON c.income_group = t.income_group
+ORDER BY c.income_group, c.bill_group;
