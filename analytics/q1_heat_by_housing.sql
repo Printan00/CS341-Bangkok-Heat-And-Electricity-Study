@@ -177,3 +177,21 @@ SELECT housing_risk_group,
   CASE WHEN (NOT sup AND NOT (c_low BETWEEN 1 AND 4 OR c_medium BETWEEN 1 AND 4 OR c_high BETWEEN 1 AND 4 OR c_heat_missing BETWEEN 1 AND 4)) THEN CAST(ROUND(100.0 * c_heat_missing / n, 1) AS varchar) ELSE '<5' END AS pct_heat_missing
 FROM flagged
 ORDER BY housing_risk_group;
+
+-- Q1.6 Heatmap: การระบายอากาศ (B8) x วัสดุผนัง (ไม้ เทียบ อื่น ๆ) -> คะแนนผลกระทบความร้อนเฉลี่ย (0-13) และจำนวนครัวเรือน
+-- ทุกช่องมีมากกว่า 5 บ้าน ค่าเฉลี่ยของกลุ่มตั้งแต่ 5 บ้านขึ้นไปไม่เปิดเผยจำนวนเล็ก; ช่องที่ n < 5 แสดงเป็น '<5'
+WITH cells AS (
+  SELECT
+    coalesce(b8_ventilation_clean, '(ไม่ระบุ/ไม่แน่ใจ)') AS ventilation,
+    CASE WHEN b3_wall_material_clean = 'ไม้' THEN 'ไม้' ELSE 'อื่น ๆ (คอนกรีต/ผสม/สังกะสี/ไม่ระบุ)' END AS wall,
+    count(*) AS n,
+    avg(heat_impact_score) AS avg_score
+  FROM bhes.happy_home_household
+  WHERE usable_q1
+  GROUP BY 1, 2
+)
+SELECT ventilation, wall,
+  CASE WHEN n >= 5 THEN CAST(n AS varchar) ELSE '<5' END AS n,
+  CASE WHEN n >= 5 THEN CAST(ROUND(avg_score, 2) AS varchar) ELSE '<5' END AS avg_heat_score
+FROM cells
+ORDER BY ventilation, wall;
