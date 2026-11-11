@@ -153,6 +153,7 @@ class BatchResult:
     row_violations: list
     passed: object = None      # list of row dicts, None when the batch stopped before row checks
     quarantine: object = None
+    missing: object = None     # {column: blank count among passed rows} for the contract's report_missing
 
     def report(self):
         """Aggregate-only summary: no ids, no raw values; per-rule counts use <5."""
@@ -173,6 +174,7 @@ class BatchResult:
                             for v in self.batch_violations],
             "row_rules": {k: {"severity": d["severity"], "rows": suppress(len(d["rows"]))}
                           for k, d in sorted(per_rule.items())},
+            "missing_in_passed_rows": {k: suppress(n) for k, n in self.missing.items()} if checked else None,
         }
 
 
@@ -237,4 +239,5 @@ def run_batch(source, data, c, row_checks, enrich, batch_id=None):
     if rate:
         batch.append(rate)
     status = "failed" if any(v.severity == "FAIL" for v in batch) else "passed"
-    return BatchResult(source, batch_id, sha, status, batch, rows, passed, quarantine)
+    missing = {col: sum(1 for r in passed if is_blank(r.get(col))) for col in c.get("report_missing", [])}
+    return BatchResult(source, batch_id, sha, status, batch, rows, passed, quarantine, missing)

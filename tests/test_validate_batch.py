@@ -155,6 +155,21 @@ def test_b06_real_contracts_allow_up_to_15_percent():
         assert quarantine_rate_violation(14, 88, rate).rule_id == "B06"  # 15.9%
 
 
+def test_report_counts_missing_values_in_passed_rows_with_small_counts_hidden():
+    cols = COLS + ["roof", "shade"]
+    rows = [["HH-%06d" % i, "หลังแฟลต", "สังกะสี", None if i < 2 else "มี"] for i in range(4)]
+    rows += [["HH-%06d" % i, "หลังแฟลต", None, "มี"] for i in range(4, 10)]
+    c = contract(columns=cols, expected_rows=10, report_missing=["roof", "shade"])
+    rep = hh.validate(book(rows, cols), c, batch_id="t").report()
+    assert rep["missing_in_passed_rows"] == {"roof": "6", "shade": "<5"}
+
+
+def test_report_has_no_missing_counts_when_the_batch_stops():
+    rows = [["HH-%06d" % i, "หลังแฟลต", "1/2"] for i in range(4)]
+    rep = hh.validate(book(rows, COLS + ["บ้านเลขที่"]), contract(report_missing=["ชื่อชุมชน"]), batch_id="t").report()
+    assert rep["missing_in_passed_rows"] is None
+
+
 def test_report_has_totals_and_per_rule_counts_with_no_ids_or_raw_values():
     rows = [["HH-000000", "หลังแฟลต"], ["HH-000001", "ลับมาก"], ["HH-000002", "หลังแฟลต"], ["HH-000003", "หลังแฟลต"]]
     rep = hh.validate(book(rows), contract(), batch_id="t").report()

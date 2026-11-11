@@ -59,6 +59,24 @@ def test_happy_home_sample_matches_documented_counts():
     assert set(rep["row_rules"]) >= {"R03"} and not any(k.startswith("R") and k != "R03" for k in rep["row_rules"])
 
 
+def test_happy_home_heat_impact_columns_are_checked_against_the_questionnaire():
+    # D1.1 / G6 columns lost their question number in the export ("ความร้อน", "ความร้อน.8") but are still checked
+    base = happy_home.validate(raw(HH_FILE), batch_id="b")
+    row_of = {r["household_code"]: i + 2 for i, r in enumerate(xlsx.read_workbook(raw(HH_FILE))["Data"].rows)}
+    a, b = base.passed[0]["household_code"], base.passed[1]["household_code"]
+    r = happy_home.validate(broken_copy(HH_FILE, "Data", [(row_of[a], "ความร้อน", "รุนแรงสุด"),
+                                                          (row_of[b], "ความร้อน.8", "แมว")]), batch_id="b")
+    assert rules_of(r, a, "household_code") == {"R05"}
+    assert rules_of(r, b, "household_code") == {"R05"}
+
+
+def test_happy_home_report_counts_missing_values_of_analysis_variables():
+    rep = happy_home.validate(raw(HH_FILE), batch_id="b").report()
+    missing = rep["missing_in_passed_rows"]
+    assert set(missing) == set(load_contract("happy_home")["report_missing"])
+    assert missing["ความร้อน"] == "0" and missing["B4. วัสดุหลังคาหลัก"] == "0"
+
+
 def test_happy_home_broken_rows_go_to_quarantine():
     c = load_contract("happy_home")
     base = happy_home.validate(raw(HH_FILE), batch_id="b")
@@ -94,3 +112,17 @@ def test_sovi_sample_passes_and_broken_rows_go_to_quarantine():
     assert rules_of(r, first, "respondent_id") == {"S03"}
     assert rules_of(r, second, "respondent_id") == {"S06"}
     assert len(r.quarantine) == 2 and r.status == "passed"
+
+
+def test_sovi_debt_and_savings_are_checked_and_export_label_for_savings_is_accepted():
+    c = load_contract("sovi")
+    debt = next(k for k in c["allowed_values"] if k.startswith("17."))
+    saving = next(k for k in c["allowed_values"] if k.startswith("18."))
+    base = sovi.validate(raw(SV_FILE), batch_id="s")
+    first, second, third = (base.passed[i]["respondent_id"] for i in range(3))
+    r = sovi.validate(broken_copy(SV_FILE, "ใส่ค่าคะแนน", [(2, debt, "ล้านล้าน"), (3, saving, "รวยมาก"),
+                                                           (4, saving, "มีเงินออม")]), batch_id="s")
+    assert rules_of(r, first, "respondent_id") == {"S03"}
+    assert rules_of(r, second, "respondent_id") == {"S03"}
+    assert rules_of(r, third, "respondent_id") == set()
+    assert set(r.report()["missing_in_passed_rows"]) == set(c["report_missing"])
