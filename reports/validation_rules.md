@@ -237,17 +237,17 @@
 
 ## 10. การเก็บ Quarantine และรายงาน (ทำแล้วใน Lambda `bhes-validate`)
 
-Lambda อ่าน `raw/<source>/batch_id=<id>/<ไฟล์>.xlsx` (source = `happy_home`, `sovi`; path นี้ต้องตรงกับ ingest #18) แล้วเขียน
+Lambda อ่าน `raw/<source>/<batch_id>/<ไฟล์>.xlsx` ตามที่ `scripts/ingest.py` (#18) เขียน (source = `happy_home`, `sovi`; `batch_id` = `<source>-<sha256 12 ตัวแรก>` จึงปกติ 1 batch = 1 ไฟล์ ไฟล์ `_manifest.json` ของ ingest ไม่ถูกอ่าน) แล้วเขียน
 
 ```
-quarantine/<source>/batch_id=<id>/
+quarantine/<source>/<batch_id>/
   dq_report.json   เขียนเสมอ: จำนวนรวม + จำนวนต่อกฎ (กฎ <5) ไม่มีรหัสหรือค่าดิบ
   violations.csv   1 บรรทัดต่อ 1 กฎที่ไม่ผ่าน (rule_id, severity, record_id, source_row, column, message)
   rows.jsonl       แถวดิบที่ไม่ผ่าน (ทั้งแถว) + rule_ids
   manifest.json    id ที่ผ่าน (+ dq_flags, community_key) และ id ที่ไม่ผ่าน ให้ Transform (#20) ใช้คู่กับไฟล์ใน raw/
 ```
 - ถ้าไม่ผ่าน privacy gate (B01) หรือหยุดที่ระดับ batch จะเขียนแค่ `dq_report.json` ไม่เก็บแถวใดๆ
-- **ไฟล์ใดไฟล์หนึ่งไม่ผ่าน = หยุดทั้ง batch** (ทีมเลือกแบบนี้ 2026-11-11): Lambda คืน `valid = true` ก็ต่อเมื่อทุกไฟล์ผ่าน Step Functions เช็กแค่ `$.valid` จึงหยุดที่ `ValidationFailed` และไฟล์ที่ผ่านแล้วก็ไม่ไป Transform ด้วย ให้แก้ไฟล์ที่พังแล้วอัปโหลดเป็น batch ใหม่ (เลือกแบบนี้เพราะไม่ต้องแก้ `stepfunctions.tf` / Transform และไฟล์ที่พังทั้งไฟล์ควรมีคนดูก่อน)
+- **ไฟล์ใดไฟล์หนึ่งไม่ผ่าน = หยุดทั้ง batch** (ทีมเลือกแบบนี้ 2026-11-11): Lambda คืน `valid = true` ก็ต่อเมื่อทุกไฟล์ผ่าน Step Functions เช็กแค่ `$.valid` จึงหยุดที่ `ValidationFailed` และไฟล์ที่ผ่านแล้วก็ไม่ไป Transform ด้วย ให้แก้ไฟล์ที่พังแล้วอัปโหลดเป็น batch ใหม่ (เลือกแบบนี้เพราะไม่ต้องแก้ `stepfunctions.tf` / Transform และไฟล์ที่พังทั้งไฟล์ควรมีคนดูก่อน) ตาม ingest ปัจจุบัน 1 batch มีไฟล์เดียว จึงไม่มีกรณีที่ไฟล์หนึ่งทำให้อีกไฟล์หยุดตาม และไฟล์ที่แก้แล้วได้ `batch_id` ใหม่เอง (sha256 เปลี่ยน)
 - Validate **ไม่เขียน trusted/** เพราะแถวที่ผ่านยังมีพิกัดและยังไม่ได้แปลง (เป็นงานของ Transform)
 - Lineage อยู่ใน `dq_report.json` / `manifest.json` (`batch_id`, `raw_key`, `source_sha256`) ส่วน `rule_version` ยังไม่ได้ทำ
 - `quarantine/` สิทธิ์เข้าถึงจำกัดตาม IAM ของ Lambda และ bucket เปิด versioning ไม่ลบทิ้ง

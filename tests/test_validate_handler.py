@@ -32,8 +32,8 @@ class FakeS3:
         self.objects[Key] = Body if isinstance(Body, bytes) else Body.encode("utf-8")
 
 
-RAW = "raw/happy_home/batch_id=b1/hh.xlsx"
-OUT = "quarantine/happy_home/batch_id=b1/"
+RAW = "raw/happy_home/b1/hh.xlsx"
+OUT = "quarantine/happy_home/b1/"
 
 
 def run(rows, header=("household_code", "ชื่อชุมชน"), event=None):
@@ -68,6 +68,21 @@ def test_privacy_failure_is_invalid_and_writes_only_the_report():
     assert result["valid"] is False
     written = sorted(k for k in s3.objects if k.startswith("quarantine/"))
     assert written == [OUT + "dq_report.json"]
+
+
+def test_ingest_layout_only_the_batch_source_is_checked():
+    # scripts/ingest.py: raw/<source>/<source>-<sha12>/<file>.xlsx + _manifest.json, one source per batch
+    hh_key = "raw/happy_home/happy_home-aaa/hh.xlsx"
+    s3 = FakeS3({
+        hh_key: xlsx_bytes({"Data": [["household_code", "ชื่อชุมชน"], ["HH-000001", "หลังแฟลต"]]}),
+        "raw/happy_home/happy_home-aaa/_manifest.json": b"{}",
+        "raw/sovi/sovi-bbb/sv.xlsx": b"not read",
+    })
+    result = handler.run({"batch_id": "happy_home-aaa"}, s3=s3, bucket="lake",
+                         contracts={"happy_home": HH_CONTRACT, "sovi": {}})
+    assert result["valid"] is True
+    assert [(v["source"], v["raw_key"]) for v in result["validation"]] == [("happy_home", hh_key)]
+    assert "quarantine/happy_home/happy_home-aaa/manifest.json" in s3.objects
 
 
 def test_missing_raw_file_raises_so_the_execution_fails_loudly():

@@ -1,8 +1,9 @@
 """Validate step (#19): check each raw survey file of a batch, write quarantine/, tell Step Functions if valid.
 
 Input event:  {"batch_id": "..."}  (+ optional "fail_at": "validate" to force a failure, as in the other stubs)
-Reads:        raw/<source>/batch_id=<batch_id>/<file>.xlsx   for source in happy_home, sovi
-Writes:       quarantine/<source>/batch_id=<batch_id>/
+Reads:        raw/<source>/<batch_id>/<file>.xlsx   as written by scripts/ingest.py (batch_id = <source>-<sha12>,
+              so a batch normally holds one source); every source folder with that batch_id is checked
+Writes:       quarantine/<source>/<batch_id>/
                 dq_report.json   always; counts only (per-rule counts below 5 shown as "<5")
                 violations.csv   one line per broken rule (not written when the privacy gate B01 fails)
                 rows.jsonl       quarantined raw rows with their rule_ids (not written when B01 fails)
@@ -35,7 +36,7 @@ def run(event, s3, bucket, contracts=None):
     batch_id = event["batch_id"]
     found = _raw_files(s3, bucket, batch_id, contracts)
     if not found:
-        raise FileNotFoundError("no raw .xlsx for batch_id=%s under raw/<source>/batch_id=%s/" % (batch_id, batch_id))
+        raise FileNotFoundError("no raw .xlsx for batch_id=%s under raw/<source>/%s/" % (batch_id, batch_id))
     summaries = []
     for source, key in found:
         data = s3.get_object(Bucket=bucket, Key=key)["Body"].read()
@@ -49,7 +50,7 @@ def _raw_files(s3, bucket, batch_id, contracts):
     sources = list(contracts) if contracts else list(VALIDATORS)
     found = []
     for source in sources:
-        prefix = "raw/%s/batch_id=%s/" % (source, batch_id)
+        prefix = "raw/%s/%s/" % (source, batch_id)
         keys = [o["Key"] for o in s3.list_objects_v2(Bucket=bucket, Prefix=prefix).get("Contents", [])
                 if o["Key"].lower().endswith(".xlsx")]
         if len(keys) > 1:
@@ -63,7 +64,7 @@ def _put(s3, bucket, key, text, content_type):
 
 
 def _write_outputs(s3, bucket, source, raw_key, result, contract):
-    prefix = "quarantine/%s/batch_id=%s/" % (source, result.batch_id)
+    prefix = "quarantine/%s/%s/" % (source, result.batch_id)
     report = {**result.report(), "raw_key": raw_key}
     _put(s3, bucket, prefix + "dq_report.json", json.dumps(report, ensure_ascii=False, indent=1), "application/json")
     summary = {k: report[k] for k in ("source", "status", "rows_in", "rows_passed", "rows_quarantined")}
