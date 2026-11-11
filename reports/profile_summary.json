@@ -1,0 +1,43 @@
+{
+  "happy_home": {
+    "rows": 88,
+    "columns": 343
+  },
+  "happy_home_checks": {
+    "duplicate_household_codes": 0,
+    "community_raw_distinct_labels": 16,
+    "community_normalised_counts": {
+      "คนรักถิ่น": "49",
+      "หลังแฟลต": "31",
+      "unclassifiable": "8"
+    },
+    "summer_bill_band_below_normal": "0",
+    "income_band_below_expense_band": "19",
+    "lowest_income_band_and_summer_bill_over_3000": "7",
+    "rows_missing_coordinates": "<5",
+    "coordinates_inside_bangkok_bbox": 85,
+    "coordinates_present_but_outside_bbox": "<5",
+    "distinct_rounded_coordinate_pairs_inside": 24,
+    "interview_month_values": [
+      "2026-07"
+    ]
+  },
+  "sovi": {
+    "rows": 500,
+    "columns": 384,
+    "score_key_rows": 363
+  },
+  "sovi_checks": {
+    "duplicate_respondent_ids": 0,
+    "distinct_community_labels": 17,
+    "community_labels_with_numeric_code_prefix": 221,
+    "headers_mentioning_heat_or_energy_use": [
+      "50.เมื่อเกิดน้ำท่วมครัวเรือนของท่านมีปัญหาด้านโครงสร้างพื้นฐานหรือไม่ [ไฟฟ้าในครัวเรือน]",
+      "51.เมื่อเกิดน้ำท่วมครัวเรือนของท่านมีปัญหาด้านโครงสร้างพื้นฐานหรือไม่ [ไฟฟ้าในครัวเรือน]",
+      "V 51. [ไฟฟ้าในครัวเรือน]",
+      "58.กรณีไฟฟ้าขัดข้อง การไฟฟ้าฯ มีระยะเวลาจัดการในการแก้ไขปัญหานานแค่ไหน"
+    ],
+    "columns_over_50pct_missing": 88,
+    "columns_over_90pct_missing": 29
+  }
+}
