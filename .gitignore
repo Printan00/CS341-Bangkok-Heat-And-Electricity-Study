@@ -4,3 +4,6 @@
 Docs/*
 !Docs/Proposal_Revision_Plan.md
 !Docs/Copy of CS341_Proposal_Template.docx.pdf
+
+# Survey data: never commit (public repo)
+data/
