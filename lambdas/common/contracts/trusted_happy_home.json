@@ -1,0 +1,914 @@
+{
+ "_meta": {
+  "table": "trusted/happy_home/batch_id=<id>/part-0.parquet",
+  "privacy": "allowlist: only these columns are written; no coordinates, names, interviewer codes or free text"
+ },
+ "forbidden_columns": [
+  "latitude",
+  "longitude",
+  "lat",
+  "lon",
+  "grid_id",
+  "interviewer_code",
+  "ชื่อชุมชน",
+  "_พิกัดครัวเรือน (ปักหมุด)_latitude",
+  "_พิกัดครัวเรือน (ปักหมุด)_longitude",
+  "ชื่อชุมชน"
+ ],
+ "columns": [
+  {
+   "name": "household_code",
+   "type": "string",
+   "nullable": false,
+   "description": "pseudonymous household id from the export (HMAC), never the real id"
+  },
+  {
+   "name": "community_key",
+   "type": "string",
+   "nullable": false,
+   "description": "T04 community after the name map, or 'unknown'"
+  },
+  {
+   "name": "community_source",
+   "type": "string",
+   "nullable": false,
+   "description": "T04 label = from the name map, unknown = name could not be mapped"
+  },
+  {
+   "name": "community_suggested",
+   "type": "string",
+   "nullable": true,
+   "description": "T04/D5 community suggested from coordinates for unknown rows; a person decides"
+  },
+  {
+   "name": "a6_income_stability",
+   "type": "string",
+   "nullable": true,
+   "description": "A6 answer, spaces/dashes made uniform (T01)"
+  },
+  {
+   "name": "a6_income_stability_clean",
+   "type": "string",
+   "nullable": true,
+   "description": "A6 for analysis: null when blank, not a questionnaire answer, or unsure (T02)"
+  },
+  {
+   "name": "a7_income_band",
+   "type": "string",
+   "nullable": true,
+   "description": "A7 answer, spaces/dashes made uniform (T01)"
+  },
+  {
+   "name": "a7_income_band_clean",
+   "type": "string",
+   "nullable": true,
+   "description": "A7 for analysis: null when blank, not a questionnaire answer, or unsure (T02)"
+  },
+  {
+   "name": "a8_expense_band",
+   "type": "string",
+   "nullable": true,
+   "description": "A8 answer, spaces/dashes made uniform (T01)"
+  },
+  {
+   "name": "a8_expense_band_clean",
+   "type": "string",
+   "nullable": true,
+   "description": "A8 for analysis: null when blank, not a questionnaire answer, or unsure (T02)"
+  },
+  {
+   "name": "a10_savings",
+   "type": "string",
+   "nullable": true,
+   "description": "A10 answer, spaces/dashes made uniform (T01)"
+  },
+  {
+   "name": "a10_savings_clean",
+   "type": "string",
+   "nullable": true,
+   "description": "A10 for analysis: null when blank, not a questionnaire answer, or unsure (T02)"
+  },
+  {
+   "name": "a11_debt",
+   "type": "string",
+   "nullable": true,
+   "description": "A11 answer, spaces/dashes made uniform (T01)"
+  },
+  {
+   "name": "a11_debt_clean",
+   "type": "string",
+   "nullable": true,
+   "description": "A11 for analysis: null when blank, not a questionnaire answer, or unsure (T02)"
+  },
+  {
+   "name": "a12_household_size",
+   "type": "string",
+   "nullable": true,
+   "description": "A12 answer, spaces/dashes made uniform (T01)"
+  },
+  {
+   "name": "a12_household_size_clean",
+   "type": "string",
+   "nullable": true,
+   "description": "A12 for analysis: null when blank, not a questionnaire answer, or unsure (T02)"
+  },
+  {
+   "name": "a14_tenure",
+   "type": "string",
+   "nullable": true,
+   "description": "A14 answer, spaces/dashes made uniform (T01)"
+  },
+  {
+   "name": "a14_tenure_clean",
+   "type": "string",
+   "nullable": true,
+   "description": "A14 for analysis: null when blank, not a questionnaire answer, or unsure (T02)"
+  },
+  {
+   "name": "b1_housing_type",
+   "type": "string",
+   "nullable": true,
+   "description": "B1 answer, spaces/dashes made uniform (T01)"
+  },
+  {
+   "name": "b1_housing_type_clean",
+   "type": "string",
+   "nullable": true,
+   "description": "B1 for analysis: null when blank, not a questionnaire answer, or unsure (T02)"
+  },
+  {
+   "name": "b3_wall_material",
+   "type": "string",
+   "nullable": true,
+   "description": "B3 answer, spaces/dashes made uniform (T01)"
+  },
+  {
+   "name": "b3_wall_material_clean",
+   "type": "string",
+   "nullable": true,
+   "description": "B3 for analysis: null when blank, not a questionnaire answer, or unsure (T02)"
+  },
+  {
+   "name": "b4_roof_material",
+   "type": "string",
+   "nullable": true,
+   "description": "B4 answer, spaces/dashes made uniform (T01)"
+  },
+  {
+   "name": "b4_roof_material_clean",
+   "type": "string",
+   "nullable": true,
+   "description": "B4 for analysis: null when blank, not a questionnaire answer, or unsure (T02)"
+  },
+  {
+   "name": "b6_ceiling",
+   "type": "string",
+   "nullable": true,
+   "description": "B6 answer, spaces/dashes made uniform (T01)"
+  },
+  {
+   "name": "b6_ceiling_clean",
+   "type": "string",
+   "nullable": true,
+   "description": "B6 for analysis: null when blank, not a questionnaire answer, or unsure (T02)"
+  },
+  {
+   "name": "b7_insulation",
+   "type": "string",
+   "nullable": true,
+   "description": "B7 answer, spaces/dashes made uniform (T01)"
+  },
+  {
+   "name": "b7_insulation_clean",
+   "type": "string",
+   "nullable": true,
+   "description": "B7 for analysis: null when blank, not a questionnaire answer, or unsure (T02)"
+  },
+  {
+   "name": "b8_ventilation",
+   "type": "string",
+   "nullable": true,
+   "description": "B8 answer, spaces/dashes made uniform (T01)"
+  },
+  {
+   "name": "b8_ventilation_clean",
+   "type": "string",
+   "nullable": true,
+   "description": "B8 for analysis: null when blank, not a questionnaire answer, or unsure (T02)"
+  },
+  {
+   "name": "b9_shade",
+   "type": "string",
+   "nullable": true,
+   "description": "B9 answer, spaces/dashes made uniform (T01)"
+  },
+  {
+   "name": "b9_shade_clean",
+   "type": "string",
+   "nullable": true,
+   "description": "B9 for analysis: null when blank, not a questionnaire answer, or unsure (T02)"
+  },
+  {
+   "name": "c2_1_heat_level",
+   "type": "string",
+   "nullable": true,
+   "description": "C2.1 answer, spaces/dashes made uniform (T01)"
+  },
+  {
+   "name": "c2_1_heat_level_clean",
+   "type": "string",
+   "nullable": true,
+   "description": "C2.1 for analysis: null when blank, not a questionnaire answer, or unsure (T02)"
+  },
+  {
+   "name": "c2_4_hottest_spot",
+   "type": "string",
+   "nullable": true,
+   "description": "C2.4 answer, spaces/dashes made uniform (T01)"
+  },
+  {
+   "name": "c2_4_hottest_spot_clean",
+   "type": "string",
+   "nullable": true,
+   "description": "C2.4 for analysis: null when blank, not a questionnaire answer, or unsure (T02)"
+  },
+  {
+   "name": "c2_6_most_affected",
+   "type": "string",
+   "nullable": true,
+   "description": "C2.6 answer, spaces/dashes made uniform (T01)"
+  },
+  {
+   "name": "c2_6_most_affected_clean",
+   "type": "string",
+   "nullable": true,
+   "description": "C2.6 for analysis: null when blank, not a questionnaire answer, or unsure (T02)"
+  },
+  {
+   "name": "c2_8_heat_retrofit",
+   "type": "string",
+   "nullable": true,
+   "description": "C2.8 answer, spaces/dashes made uniform (T01)"
+  },
+  {
+   "name": "c2_8_heat_retrofit_clean",
+   "type": "string",
+   "nullable": true,
+   "description": "C2.8 for analysis: null when blank, not a questionnaire answer, or unsure (T02)"
+  },
+  {
+   "name": "d1_1_heat_income_impact",
+   "type": "string",
+   "nullable": true,
+   "description": "D1.1H answer, spaces/dashes made uniform (T01)"
+  },
+  {
+   "name": "d1_1_heat_income_impact_clean",
+   "type": "string",
+   "nullable": true,
+   "description": "D1.1H for analysis: null when blank, not a questionnaire answer, or unsure (T02)"
+  },
+  {
+   "name": "d2_1_heat_health_problem",
+   "type": "string",
+   "nullable": true,
+   "description": "D2.1H answer, spaces/dashes made uniform (T01)"
+  },
+  {
+   "name": "d2_1_heat_health_problem_clean",
+   "type": "string",
+   "nullable": true,
+   "description": "D2.1H for analysis: null when blank, not a questionnaire answer, or unsure (T02)"
+  },
+  {
+   "name": "d2_2_heat_stress",
+   "type": "string",
+   "nullable": true,
+   "description": "D2.2H answer, spaces/dashes made uniform (T01)"
+  },
+  {
+   "name": "d2_2_heat_stress_clean",
+   "type": "string",
+   "nullable": true,
+   "description": "D2.2H for analysis: null when blank, not a questionnaire answer, or unsure (T02)"
+  },
+  {
+   "name": "e1_1_bill_normal_band",
+   "type": "string",
+   "nullable": true,
+   "description": "E1.1 answer, spaces/dashes made uniform (T01)"
+  },
+  {
+   "name": "e1_1_bill_normal_band_clean",
+   "type": "string",
+   "nullable": true,
+   "description": "E1.1 for analysis: null when blank, not a questionnaire answer, or unsure (T02)"
+  },
+  {
+   "name": "e1_2_bill_summer_band",
+   "type": "string",
+   "nullable": true,
+   "description": "E1.2 answer, spaces/dashes made uniform (T01)"
+  },
+  {
+   "name": "e1_2_bill_summer_band_clean",
+   "type": "string",
+   "nullable": true,
+   "description": "E1.2 for analysis: null when blank, not a questionnaire answer, or unsure (T02)"
+  },
+  {
+   "name": "e1_3_summer_bill_increase",
+   "type": "string",
+   "nullable": true,
+   "description": "E1.3 answer, spaces/dashes made uniform (T01)"
+  },
+  {
+   "name": "e1_3_summer_bill_increase_clean",
+   "type": "string",
+   "nullable": true,
+   "description": "E1.3 for analysis: null when blank, not a questionnaire answer, or unsure (T02)"
+  },
+  {
+   "name": "e2_4_top_bill_appliance",
+   "type": "string",
+   "nullable": true,
+   "description": "E2.4 answer, spaces/dashes made uniform (T01)"
+  },
+  {
+   "name": "e2_4_top_bill_appliance_clean",
+   "type": "string",
+   "nullable": true,
+   "description": "E2.4 for analysis: null when blank, not a questionnaire answer, or unsure (T02)"
+  },
+  {
+   "name": "e2_6_cut_use",
+   "type": "string",
+   "nullable": true,
+   "description": "E2.6 answer, spaces/dashes made uniform (T01)"
+  },
+  {
+   "name": "e2_6_cut_use_clean",
+   "type": "string",
+   "nullable": true,
+   "description": "E2.6 for analysis: null when blank, not a questionnaire answer, or unsure (T02)"
+  },
+  {
+   "name": "g8_support_source",
+   "type": "string",
+   "nullable": true,
+   "description": "G8 answer, spaces/dashes made uniform (T01)"
+  },
+  {
+   "name": "g8_support_source_clean",
+   "type": "string",
+   "nullable": true,
+   "description": "G8 for analysis: null when blank, not a questionnaire answer, or unsure (T02)"
+  },
+  {
+   "name": "a13_child_under5",
+   "type": "int8",
+   "nullable": true,
+   "description": "A13 option 'เด็กอายุต่ำกว่า 5 ปี' selected (1/0)"
+  },
+  {
+   "name": "a13_school_child",
+   "type": "int8",
+   "nullable": true,
+   "description": "A13 option 'เด็กวัยเรียน' selected (1/0)"
+  },
+  {
+   "name": "a13_elderly",
+   "type": "int8",
+   "nullable": true,
+   "description": "A13 option 'ผู้สูงอายุ' selected (1/0)"
+  },
+  {
+   "name": "a13_disabled",
+   "type": "int8",
+   "nullable": true,
+   "description": "A13 option 'ผู้พิการ' selected (1/0)"
+  },
+  {
+   "name": "a13_chronic_ill",
+   "type": "int8",
+   "nullable": true,
+   "description": "A13 option 'ผู้ป่วยเรื้อรัง' selected (1/0)"
+  },
+  {
+   "name": "a13_bedridden",
+   "type": "int8",
+   "nullable": true,
+   "description": "A13 option 'ผู้ป่วยติดเตียง' selected (1/0)"
+  },
+  {
+   "name": "a13_pregnant",
+   "type": "int8",
+   "nullable": true,
+   "description": "A13 option 'หญิงตั้งครรภ์' selected (1/0)"
+  },
+  {
+   "name": "a13_none",
+   "type": "int8",
+   "nullable": true,
+   "description": "A13 option 'ไม่มี' selected (1/0)"
+  },
+  {
+   "name": "b11_cramped",
+   "type": "int8",
+   "nullable": true,
+   "description": "B11 option 'พื้นที่คับแคบ' selected (1/0)"
+  },
+  {
+   "name": "b11_very_hot",
+   "type": "int8",
+   "nullable": true,
+   "description": "B11 option 'ร้อนมาก' selected (1/0)"
+  },
+  {
+   "name": "b11_stuffy",
+   "type": "int8",
+   "nullable": true,
+   "description": "B11 option 'อับลม' selected (1/0)"
+  },
+  {
+   "name": "b11_roof_leak",
+   "type": "int8",
+   "nullable": true,
+   "description": "B11 option 'น้ำรั่วจากหลังคา' selected (1/0)"
+  },
+  {
+   "name": "b11_standing_water",
+   "type": "int8",
+   "nullable": true,
+   "description": "B11 option 'น้ำขังรอบบ้าน' selected (1/0)"
+  },
+  {
+   "name": "b11_damp_mold",
+   "type": "int8",
+   "nullable": true,
+   "description": "B11 option 'ความชื้น/เชื้อรา' selected (1/0)"
+  },
+  {
+   "name": "b11_unstable_structure",
+   "type": "int8",
+   "nullable": true,
+   "description": "B11 option 'โครงสร้างไม่มั่นคง' selected (1/0)"
+  },
+  {
+   "name": "b11_no_problem",
+   "type": "int8",
+   "nullable": true,
+   "description": "B11 option 'ไม่มีปัญหา' selected (1/0)"
+  },
+  {
+   "name": "b11_other",
+   "type": "int8",
+   "nullable": true,
+   "description": "B11 option 'อื่น ๆ' selected (1/0)"
+  },
+  {
+   "name": "b12_no_budget",
+   "type": "int8",
+   "nullable": true,
+   "description": "B12 option 'ไม่มีงบประมาณ' selected (1/0)"
+  },
+  {
+   "name": "b12_limited_space",
+   "type": "int8",
+   "nullable": true,
+   "description": "B12 option 'พื้นที่จำกัด' selected (1/0)"
+  },
+  {
+   "name": "b12_renter_no_say",
+   "type": "int8",
+   "nullable": true,
+   "description": "B12 option 'บ้านเช่า/ไม่มีสิทธิ์ตัดสินใจ' selected (1/0)"
+  },
+  {
+   "name": "b12_dont_know_how",
+   "type": "int8",
+   "nullable": true,
+   "description": "B12 option 'ไม่รู้จะปรับอย่างไร' selected (1/0)"
+  },
+  {
+   "name": "b12_costly",
+   "type": "int8",
+   "nullable": true,
+   "description": "B12 option 'วัสดุ/ช่างมีราคาแพง' selected (1/0)"
+  },
+  {
+   "name": "b12_other",
+   "type": "int8",
+   "nullable": true,
+   "description": "B12 option 'อื่น ๆ' selected (1/0)"
+  },
+  {
+   "name": "c2_5_sleep_loss",
+   "type": "int8",
+   "nullable": true,
+   "description": "C2.5 option 'นอนไม่หลับ' selected (1/0)"
+  },
+  {
+   "name": "c2_5_discomfort",
+   "type": "int8",
+   "nullable": true,
+   "description": "C2.5 option 'อยู่ในบ้านไม่สบาย' selected (1/0)"
+  },
+  {
+   "name": "c2_5_headache_fatigue",
+   "type": "int8",
+   "nullable": true,
+   "description": "C2.5 option 'ปวดหัว/อ่อนเพลีย' selected (1/0)"
+  },
+  {
+   "name": "c2_5_work_difficulty",
+   "type": "int8",
+   "nullable": true,
+   "description": "C2.5 option 'ทำงานลำบาก' selected (1/0)"
+  },
+  {
+   "name": "c2_5_child_study_difficulty",
+   "type": "int8",
+   "nullable": true,
+   "description": "C2.5 option 'เด็กเรียนหนังสือลำบาก' selected (1/0)"
+  },
+  {
+   "name": "c2_5_bill_increase",
+   "type": "int8",
+   "nullable": true,
+   "description": "C2.5 option 'ค่าไฟเพิ่ม' selected (1/0)"
+  },
+  {
+   "name": "c2_5_unclear",
+   "type": "int8",
+   "nullable": true,
+   "description": "C2.5 option 'ไม่ชัดเจน' selected (1/0)"
+  },
+  {
+   "name": "c2_5_other",
+   "type": "int8",
+   "nullable": true,
+   "description": "C2.5 option 'อื่น ๆ' selected (1/0)"
+  },
+  {
+   "name": "c2_7_fan",
+   "type": "int8",
+   "nullable": true,
+   "description": "C2.7 option 'เปิดพัดลม' selected (1/0)"
+  },
+  {
+   "name": "c2_7_aircon",
+   "type": "int8",
+   "nullable": true,
+   "description": "C2.7 option 'เปิดแอร์' selected (1/0)"
+  },
+  {
+   "name": "c2_7_shower_more",
+   "type": "int8",
+   "nullable": true,
+   "description": "C2.7 option 'อาบน้ำบ่อยขึ้น' selected (1/0)"
+  },
+  {
+   "name": "c2_7_open_windows",
+   "type": "int8",
+   "nullable": true,
+   "description": "C2.7 option 'เปิดประตู/หน้าต่าง' selected (1/0)"
+  },
+  {
+   "name": "c2_7_stay_elsewhere",
+   "type": "int8",
+   "nullable": true,
+   "description": "C2.7 option 'ไปอยู่ที่อื่นชั่วคราว' selected (1/0)"
+  },
+  {
+   "name": "c2_7_shaded_outdoor_space",
+   "type": "int8",
+   "nullable": true,
+   "description": "C2.7 option 'ใช้พื้นที่นอกบ้านที่ร่มกว่า' selected (1/0)"
+  },
+  {
+   "name": "c2_7_no_coping",
+   "type": "int8",
+   "nullable": true,
+   "description": "C2.7 option 'ไม่มีวิธีรับมือ' selected (1/0)"
+  },
+  {
+   "name": "c2_7_other",
+   "type": "int8",
+   "nullable": true,
+   "description": "C2.7 option 'อื่น ๆ' selected (1/0)"
+  },
+  {
+   "name": "e2_1_fan",
+   "type": "int8",
+   "nullable": true,
+   "description": "E2.1 option 'พัดลม' selected (1/0)"
+  },
+  {
+   "name": "e2_1_aircon",
+   "type": "int8",
+   "nullable": true,
+   "description": "E2.1 option 'เครื่องปรับอากาศ' selected (1/0)"
+  },
+  {
+   "name": "e2_1_fridge",
+   "type": "int8",
+   "nullable": true,
+   "description": "E2.1 option 'ตู้เย็น' selected (1/0)"
+  },
+  {
+   "name": "e2_1_tv",
+   "type": "int8",
+   "nullable": true,
+   "description": "E2.1 option 'โทรทัศน์' selected (1/0)"
+  },
+  {
+   "name": "e2_1_washing_machine",
+   "type": "int8",
+   "nullable": true,
+   "description": "E2.1 option 'เครื่องซักผ้า' selected (1/0)"
+  },
+  {
+   "name": "e2_1_mobile_phone",
+   "type": "int8",
+   "nullable": true,
+   "description": "E2.1 option 'โทรศัพท์มือถือ' selected (1/0)"
+  },
+  {
+   "name": "e2_1_lighting",
+   "type": "int8",
+   "nullable": true,
+   "description": "E2.1 option 'ไฟส่องสว่าง' selected (1/0)"
+  },
+  {
+   "name": "e2_1_iron",
+   "type": "int8",
+   "nullable": true,
+   "description": "E2.1 option 'เตารีด' selected (1/0)"
+  },
+  {
+   "name": "e2_1_water_heater",
+   "type": "int8",
+   "nullable": true,
+   "description": "E2.1 option 'เครื่องทำน้ำอุ่น' selected (1/0)"
+  },
+  {
+   "name": "e2_1_microwave",
+   "type": "int8",
+   "nullable": true,
+   "description": "E2.1 option 'เตาไมโครเวฟ' selected (1/0)"
+  },
+  {
+   "name": "e2_1_water_pump",
+   "type": "int8",
+   "nullable": true,
+   "description": "E2.1 option 'ปั๊มน้ำ' selected (1/0)"
+  },
+  {
+   "name": "e2_1_rice_cooker",
+   "type": "int8",
+   "nullable": true,
+   "description": "E2.1 option 'หม้อหุงข้าว' selected (1/0)"
+  },
+  {
+   "name": "e2_1_electric_stove",
+   "type": "int8",
+   "nullable": true,
+   "description": "E2.1 option 'เตาไฟฟ้า' selected (1/0)"
+  },
+  {
+   "name": "e2_1_other",
+   "type": "int8",
+   "nullable": true,
+   "description": "E2.1 option 'อื่น ๆ' selected (1/0)"
+  },
+  {
+   "name": "c2_8_done_awning",
+   "type": "int8",
+   "nullable": true,
+   "description": "C2.8_detail option 'ติดกันสาด' selected (1/0)"
+  },
+  {
+   "name": "c2_8_done_add_fan",
+   "type": "int8",
+   "nullable": true,
+   "description": "C2.8_detail option 'เพิ่มพัดลม' selected (1/0)"
+  },
+  {
+   "name": "c2_8_done_add_vents",
+   "type": "int8",
+   "nullable": true,
+   "description": "C2.8_detail option 'เพิ่มช่องลม' selected (1/0)"
+  },
+  {
+   "name": "c2_8_done_plant_trees",
+   "type": "int8",
+   "nullable": true,
+   "description": "C2.8_detail option 'ปลูกต้นไม้' selected (1/0)"
+  },
+  {
+   "name": "c2_8_done_replace_roof",
+   "type": "int8",
+   "nullable": true,
+   "description": "C2.8_detail option 'เปลี่ยนหลังคา' selected (1/0)"
+  },
+  {
+   "name": "c2_8_done_insulation",
+   "type": "int8",
+   "nullable": true,
+   "description": "C2.8_detail option 'ติดฉนวน' selected (1/0)"
+  },
+  {
+   "name": "c2_8_done_other",
+   "type": "int8",
+   "nullable": true,
+   "description": "C2.8_detail option 'อื่น ๆ.1' selected (1/0)"
+  },
+  {
+   "name": "household_size_band",
+   "type": "string",
+   "nullable": true,
+   "description": "T03 A12 as a band (a whole number is put into its band)"
+  },
+  {
+   "name": "income_ord",
+   "type": "int8",
+   "nullable": true,
+   "description": "T06 A7 band order 1-5"
+  },
+  {
+   "name": "income_min",
+   "type": "int32",
+   "nullable": true,
+   "description": "T06 A7 band lower bound (baht/month; open band floor 2,500 per D1)"
+  },
+  {
+   "name": "income_max",
+   "type": "int32",
+   "nullable": true,
+   "description": "T06 A7 band upper bound (open band cap 100,000 per D1)"
+  },
+  {
+   "name": "bill_normal_ord",
+   "type": "int8",
+   "nullable": true,
+   "description": "T06 E1.1 band order 1-5"
+  },
+  {
+   "name": "bill_normal_min",
+   "type": "int32",
+   "nullable": true,
+   "description": "T06 E1.1 lower bound (baht/month)"
+  },
+  {
+   "name": "bill_normal_max",
+   "type": "int32",
+   "nullable": true,
+   "description": "T06 E1.1 upper bound (open band cap 6,000 per D1)"
+  },
+  {
+   "name": "bill_summer_ord",
+   "type": "int8",
+   "nullable": true,
+   "description": "T06 E1.2 band order 1-5"
+  },
+  {
+   "name": "bill_summer_min",
+   "type": "int32",
+   "nullable": true,
+   "description": "T06 E1.2 lower bound (baht/month)"
+  },
+  {
+   "name": "bill_summer_max",
+   "type": "int32",
+   "nullable": true,
+   "description": "T06 E1.2 upper bound (open band cap 6,000 per D1)"
+  },
+  {
+   "name": "burden_min",
+   "type": "float64",
+   "nullable": true,
+   "description": "T07 summer bill_min / income_max"
+  },
+  {
+   "name": "burden_max",
+   "type": "float64",
+   "nullable": true,
+   "description": "T07 summer bill_max / income_min"
+  },
+  {
+   "name": "burden_class",
+   "type": "string",
+   "nullable": true,
+   "description": "T07 high / possibly_high / low at 10% (D2)"
+  },
+  {
+   "name": "burden_class_6pct",
+   "type": "string",
+   "nullable": true,
+   "description": "T07 sensitivity check at 6% (D2)"
+  },
+  {
+   "name": "burden_normal_min",
+   "type": "float64",
+   "nullable": true,
+   "description": "T07 normal-season bill_min / income_max (for comparison)"
+  },
+  {
+   "name": "burden_normal_max",
+   "type": "float64",
+   "nullable": true,
+   "description": "T07 normal-season bill_max / income_min (for comparison)"
+  },
+  {
+   "name": "has_aircon",
+   "type": "bool",
+   "nullable": true,
+   "description": "T08 E2.1 owns an air conditioner"
+  },
+  {
+   "name": "housing_heat_score",
+   "type": "int8",
+   "nullable": true,
+   "description": "T09 0-5; null when fewer than 4 of B4/B6/B7/B8/B9 answered clearly"
+  },
+  {
+   "name": "housing_items_answered",
+   "type": "int8",
+   "nullable": true,
+   "description": "T09 how many of B4/B6/B7/B8/B9 were answered clearly"
+  },
+  {
+   "name": "heat_impact_score",
+   "type": "int8",
+   "nullable": true,
+   "description": "T10 0-13"
+  },
+  {
+   "name": "heat_impact_level",
+   "type": "string",
+   "nullable": true,
+   "description": "T10/D6 low 0-4 / medium 5-7 / high 8-13"
+  },
+  {
+   "name": "coping_limit_score",
+   "type": "int8",
+   "nullable": true,
+   "description": "T10 0-6"
+  },
+  {
+   "name": "coping_limited",
+   "type": "bool",
+   "nullable": true,
+   "description": "T10/D6 coping_limit_score >= 3"
+  },
+  {
+   "name": "usable_q1",
+   "type": "bool",
+   "nullable": false,
+   "description": "T11 row can be used for Q1 (V07, V14)"
+  },
+  {
+   "name": "usable_q2",
+   "type": "bool",
+   "nullable": false,
+   "description": "T11 row can be used for Q2 (V07, V14)"
+  },
+  {
+   "name": "usable_q3",
+   "type": "bool",
+   "nullable": false,
+   "description": "T11 row can be used for Q3 (V07, V14)"
+  },
+  {
+   "name": "dq_flags",
+   "type": "string",
+   "nullable": false,
+   "description": "WARN rule ids from Validate, comma separated ('' when none)"
+  },
+  {
+   "name": "source_dataset",
+   "type": "string",
+   "nullable": false,
+   "description": "T12 lineage: survey name"
+  },
+  {
+   "name": "batch_id",
+   "type": "string",
+   "nullable": false,
+   "description": "T12 lineage: ingest batch id"
+  },
+  {
+   "name": "source_file_sha256",
+   "type": "string",
+   "nullable": false,
+   "description": "T12 lineage: sha256 of the raw file"
+  },
+  {
+   "name": "source_row",
+   "type": "int32",
+   "nullable": false,
+   "description": "T12 lineage: row number in the raw sheet"
+  }
+ ]
+}

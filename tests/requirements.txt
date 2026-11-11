@@ -1,0 +1,5 @@
+# Test-only. Validate uses the Python standard library; Transform/Integrate/Verify get pyarrow
+# from the AWS SDK for pandas Lambda layer (infra/terraform/lambda.tf).
+pytest>=8
+openpyxl>=3.1  # builds synthetic .xlsx files in tests
+pyarrow>=17    # Parquet, same library the Lambda layer provides
