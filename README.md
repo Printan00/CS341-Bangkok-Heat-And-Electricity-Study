@@ -37,7 +37,7 @@
 - ข้อมูลลักษณะบ้าน ผลกระทบจากความร้อน การใช้พลังงาน และแนวทางปรับปรุงสภาพแวดล้อม
 
 ### Optional Data Sources
-- Landsat / GIS (Earth Engine) ใช้ได้เฉพาะระดับชุมชน และจะตัดออกถ้าเชื่อมกับข้อมูลสำรวจไม่ได้
+- Landsat / GIS (Earth Engine) ใช้เป็นตัวแปรเสริมระดับชุมชนของ Happy Home เท่านั้น (`scripts/gee_lst.py`, ดู `reports/integration_feasibility.md`) จะตัดออกถ้าความต่างระหว่างชุมชนไม่มีนัย
 - Climate and Heat Hazard Open Data
 
 > ข้อมูลสำรวจดิบ **ไม่อยู่ใน repo นี้** (repo เป็น public และข้อมูลไม่ผ่าน k-anonymity) เก็บในโฟลเดอร์ `data/` ในเครื่องเท่านั้น ซึ่งถูกตั้งไว้ใน `.gitignore` สมาชิกรับไฟล์จากช่องทางของวิชา
@@ -91,6 +91,7 @@ README.md                      ภาพรวมโครงการ (ไฟ�
 architecture/                  Architecture diagram (.drawio.svg ต้นฉบับ + .png) และวิธีแก้ไข
 reports/                       data dictionary และรายการตัวแปร (เฉพาะค่ารวม ไม่มีข้อมูลรายแถว)
 scripts/profile_codebook.py    สคริปต์ตรวจ codebook รันซ้ำได้
+scripts/gee_lst.py             LST ระดับชุมชนจาก Landsat ผ่าน Earth Engine (ทางเลือก ต้อง authenticate)
 scripts/ingest.py              นำไฟล์จาก data/ เข้า S3 raw/ พร้อม metadata (รันซ้ำไม่เกิดข้อมูลซ้ำ)
 infra/terraform/               Terraform ของทรัพยากร AWS ทั้งหมด (S3, IAM, Lambda, Step Functions, Glue, Athena)
 lambdas/<step>/handler.py      โค้ด Lambda แต่ละขั้น (ตอนนี้เป็น stub รอ #19–#22) แก้แล้ว terraform apply เพื่อ deploy

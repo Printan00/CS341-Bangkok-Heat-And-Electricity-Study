@@ -1,0 +1,24 @@
+concept,sovi_question,sovi_col_index,happy_home_question,happy_home_col_index,match,harmonize_rule,note
+household_size,col 4 จำนวนผู้อยู่อาศัย,4,A12,26,exact,"bin HH to 1 / 2-3 / 4-5 / 6-7 / 8+ (HH ใช้ 6+ ทำให้ได้ 6+ เท่านั้น)",HH เก็บเป็นช่วง 6+
+disabled_member,Q8,22,A13 ผู้พิการ,31,exact,flag มี/ไม่มี,
+bedridden_member,Q9,25,A13 ผู้ป่วยติดเตียง,33,exact,flag มี/ไม่มี,
+chronic_patient,Q10,28,A13 ผู้ป่วยเรื้อรัง,32,approx,flag มี/ไม่มี,SoVI ถามผู้ป่วยทั่วไป HH ถามเรื้อรัง
+elderly_member,col 10 จำนวนผู้สูงอายุ,10,A13 ผู้สูงอายุ,30,approx,"SoVI count>=1 -> มี",SoVI นิยามอายุ >65 HH ไม่ระบุอายุ
+education,Q12,33,A4,10,coarse,"HH ยุบเป็น ประถมหรือต่ำกว่า / มัธยม-อาชีวะ / ปริญญาตรีขึ้นไป",
+occupation,Q13,34,A5,11,coarse,ต้องจัดกลุ่มเอง,หมวดไม่ตรงกัน
+income_band,Q15,37,A7,13,ordinal_only,"low/mid/high เชิงอันดับ เส้นตรงกันได้แค่ 50000",SoVI <15k 15-30k 30-50k 50-100k; HH <5k 5-10k 10-20k 20-50k >50k
+expenditure_band,Q16,39,A8,14,ordinal_only,เหมือน income_band,SoVI ไม่แยกค่าไฟ
+debt,Q17,41,A11,25,partial,"ช่วง 10000-50000 ตรงกัน ที่เหลือรวมเป็น มี/ไม่มี",
+savings,Q18,43,A10,24,coarse,"ยุบเป็น มี/ไม่มี (SoVI: มีเงินออม=มี)",
+house_type,Q19,45,B1,61,partial,"บ้านเดี่ยว/ทาวน์เฮาส์ ตรงกัน; SoVI มีคอนโด บ้านแฝด ห้องแถว HH มีห้องเช่า/แฟลต เพิง",
+floors,Q20,47,B2,62,exact,"1 / 2 / 3+",
+material_roof,Q21,49,B3 และ B4,63,approx,SoVI รวมโครงสร้างกับหลังคาในข้อเดียว,
+raised_floor,Q22,51,B5,65,exact,"ยกพื้น / ระดับพื้นดิน / ต่ำกว่า",
+flood_experience,Q34-35,95,C1.1,89,exact,เคย/ไม่เคย,SoVI ตอบเคย 484/500
+electricity_in_flood,Q50-51,151,C1.8 ไฟรั่ว และ D3.1,,loose,ความหมายต่างกัน,ไม่ควรเทียบเป็นตัวเลข
+residence_duration,Q23 (อายุบ้าน),53,A15 (นานที่อยู่ในพื้นที่),37,DO_NOT_MATCH,,ความหมายต่างกัน
+electricity_cost,-,,E1.1-E1.3,225,none,,SoVI ไม่มี
+appliances_cooling,-,,E2.1-E2.4,,none,,SoVI ไม่มี
+heat_exposure,-,,C2.x D1.1 ความร้อน,115,none,,SoVI ไม่มี
+solar_pv,-,,E3,,none,,SoVI ไม่มี
+nbs_preference,-,,F1-F7,,none,,SoVI ไม่มี
