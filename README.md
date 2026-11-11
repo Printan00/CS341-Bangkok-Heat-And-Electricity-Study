@@ -91,6 +91,7 @@ README.md                      ภาพรวมโครงการ (ไฟ�
 architecture/                  Architecture diagram (.drawio.svg ต้นฉบับ + .png) และวิธีแก้ไข
 reports/                       data dictionary และรายการตัวแปร (เฉพาะค่ารวม ไม่มีข้อมูลรายแถว)
 scripts/profile_codebook.py    สคริปต์ตรวจ codebook รันซ้ำได้
+infra/terraform/               Terraform ของทรัพยากร AWS ทั้งหมด (S3 ตอนนี้, IAM/Step Functions/Glue/Athena ตามมา)
 Docs/                          Proposal และแผนแก้ไข (ไฟล์อื่นใน Docs/ ไม่ track)
 data/                          ข้อมูลสำรวจดิบ (ในเครื่องเท่านั้น อยู่ใน .gitignore)
 ```
@@ -102,6 +103,37 @@ python -m venv .venv && .venv/bin/pip install -r scripts/requirements.txt
 .venv/bin/python scripts/profile_codebook.py --data-dir data --out reports
 ```
 ผลลัพธ์เป็นค่ารวมเท่านั้น (เซลล์ n < 5 แสดงเป็น `<5` ไม่มีพิกัดหรือรหัสครัวเรือน)
+
+## 8.1 Deploy / Destroy (Terraform)
+Region: `ap-southeast-1` (Singapore) ต้องตั้ง AWS CLI credentials ก่อน
+
+| Bucket | ใช้ทำอะไร |
+|---|---|
+| `bhes-lake-<account_id>` | data lake: `raw/`, `quarantine/`, `trusted/`, `curated/` (versioning เปิด) |
+| `bhes-athena-results-<account_id>` | ผลลัพธ์ query ของ Athena |
+| `bhes-tfstate-<account_id>` | Terraform state (สร้างด้วยมือครั้งเดียว ไม่อยู่ใน Terraform) |
+
+ทุก bucket เปิด Block Public Access ครบ 4 ข้อ
+
+**ครั้งแรกเท่านั้น: สร้าง bucket สำหรับ state** (ทำแล้วสำหรับ account ของทีม)
+```bash
+B=bhes-tfstate-<account_id>; R=ap-southeast-1
+aws s3api create-bucket --bucket $B --region $R --create-bucket-configuration LocationConstraint=$R
+aws s3api put-bucket-versioning --bucket $B --versioning-configuration Status=Enabled
+aws s3api put-public-access-block --bucket $B --public-access-block-configuration BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=true,RestrictPublicBuckets=true
+```
+
+**Deploy**
+```bash
+terraform -chdir=infra/terraform init
+terraform -chdir=infra/terraform plan
+terraform -chdir=infra/terraform apply
+```
+
+**Destroy** bucket ต้องว่างก่อน (ไม่ได้เปิด `force_destroy` เพื่อกันข้อมูลหาย) lake bucket มี versioning จึงต้องลบทุก version ออกด้วย (ทำได้ใน S3 console ด้วยปุ่ม Empty)
+```bash
+terraform -chdir=infra/terraform destroy
+```
 
 ## 9. สถานะและการทำงาน
 | สถานะ | รายการ |
