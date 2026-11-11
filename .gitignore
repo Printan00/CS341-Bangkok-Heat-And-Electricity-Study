@@ -1,0 +1,6 @@
+.DS_Store
+
+# Docs: track only the proposal and its revision plan
+Docs/*
+!Docs/Proposal_Revision_Plan.md
+!Docs/Copy of CS341_Proposal_Template.docx.pdf
