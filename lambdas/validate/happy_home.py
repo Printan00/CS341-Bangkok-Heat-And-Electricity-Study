@@ -1,4 +1,4 @@
-"""Happy Home (ThaiCI household survey) rules. See reports/validation_rules.md §4-§6."""
+"""Happy Home (ThaiCI household survey) rules. See reports/validation_rules.md (details: validation_rules_detail.md §5-§6)."""
 import re
 
 from core import (Table, duplicate_content_mask, flag, flag_on, is_blank, load_contract, norm_label, run_batch,
