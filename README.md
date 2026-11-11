@@ -94,7 +94,9 @@ scripts/profile_codebook.py    สคริปต์ตรวจ codebook รั
 scripts/gee_lst.py             LST ระดับชุมชนจาก Landsat ผ่าน Earth Engine (ทางเลือก ต้อง authenticate)
 scripts/ingest.py              นำไฟล์จาก data/ เข้า S3 raw/ พร้อม metadata (รันซ้ำไม่เกิดข้อมูลซ้ำ)
 infra/terraform/               Terraform ของทรัพยากร AWS ทั้งหมด (S3, IAM, Lambda, Step Functions, Glue, Athena)
-lambdas/<step>/handler.py      โค้ด Lambda แต่ละขั้น (ตอนนี้เป็น stub รอ #19–#22) แก้แล้ว terraform apply เพื่อ deploy
+lambdas/<step>/handler.py      โค้ด Lambda แต่ละขั้น (check_batch, validate, transform, integrate, verify)
+lambdas/common/                โค้ดที่ทุกขั้นใช้ร่วม + contracts/ (กฎ, ชื่อคอลัมน์จริง, schema ของ trusted/curated)
+tests/                         เทสต์อัตโนมัติของ pipeline (pytest)
 Docs/                          Proposal และแผนแก้ไข (ไฟล์อื่นใน Docs/ ไม่ track)
 data/                          ข้อมูลสำรวจดิบ (ในเครื่องเท่านั้น อยู่ใน .gitignore)
 ```
@@ -162,18 +164,59 @@ aws stepfunctions start-execution --state-machine-arn arn:aws:states:ap-southeas
 aws glue start-crawler --name bhes-curated
 aws athena start-query-execution --work-group bhes-wg --query-execution-context Database=bhes --query-string 'SELECT ...'
 ```
-ทดสอบว่า workflow หยุดที่ขั้นที่ล้มเหลว: ใส่ `"fail_at":"transform"` ใน input (ใช้ได้เฉพาะ stub)
+ทดสอบว่า workflow หยุดที่ขั้นที่ล้มเหลว: ใส่ `"fail_at":"transform"` ใน input (ใช้ได้ทุกขั้น) ต้อง ingest ไฟล์ก่อน ไม่อย่างนั้นจะหยุดที่ Validate
+
+ผลลัพธ์ของแต่ละ batch (กฎและเหตุผลอยู่ใน [reports/validation_rules.md](reports/validation_rules.md)):
+
+| ขั้น | เขียนที่ |
+|---|---|
+| Validate | `quarantine/<source>/<batch_id>/` : `dq_report.json` (ผ่าน/ไม่ผ่านกี่แถว เพราะกฎไหน), `violations.csv`, `rows.jsonl` (แถวที่ถูกแยก), `manifest.json` |
+| Transform | `trusted/happy_home/batch_id=<batch_id>/part-0.parquet` (ไม่มีพิกัด ชื่อ หรือรหัสผู้สัมภาษณ์) |
+| Integrate | `curated/_pipeline/staging/<batch_id>/happy_home_household.parquet` (risk score T13) |
+| Verify | ผ่าน: `curated/happy_home_household/part-0.parquet` + `curated/_pipeline/success/<batch_id>/_SUCCESS.json`; ไม่ผ่าน: workflow ล้มที่ Verify พร้อมเหตุผล |
+
+รัน batch เดิมซ้ำ: CheckBatch เจอ `_SUCCESS.json` ของ batch นั้น จึงไปที่ SkipDuplicate ไม่เขียนอะไรซ้ำ (batch ที่ล้มกลางทางไม่มีไฟล์นี้ จึงรันใหม่ได้ ทุกขั้นเขียนทับ key เดิม ไม่เกิดข้อมูลซ้ำ)
+แก้กฎหรือเกณฑ์ใน `lambdas/common/contracts/` แล้ว (และ `terraform apply` แล้ว) ให้รันไฟล์เดิมด้วย `--input '{"batch_id":"<batch_id>","force":true}'` ไม่อย่างนั้นจะถูกข้าม เพราะไฟล์เดิมได้ `batch_id` เดิม
+ตอนนี้มีกฎตรวจเฉพาะ Happy Home: batch ของ SoVI จะหยุดที่ Validate (`valid = false`) พร้อมเหตุผลใน `dq_report.json`
+Transform, Integrate และ Verify ใช้ pyarrow จาก Lambda layer ของ AWS (AWS SDK for pandas) ส่วน Validate ใช้ Python standard library อย่างเดียว
 
 **Destroy** bucket ต้องว่างก่อน (ไม่ได้เปิด `force_destroy` เพื่อกันข้อมูลหาย) lake bucket มี versioning จึงต้องลบทุก version ออกด้วย (ทำได้ใน S3 console ด้วยปุ่ม Empty)
 ```bash
 terraform -chdir=infra/terraform destroy
 ```
 
+## 8.2 เทสต์อัตโนมัติ (#22)
+```bash
+pip install -r tests/requirements.txt
+python -m pytest tests                                  # ข้อมูลสังเคราะห์ ไม่ต้องมีไฟล์จริง
+BHES_SAMPLE_DIR=<โฟลเดอร์ไฟล์สำรวจ> python -m pytest tests   # เพิ่มเทสต์กับไฟล์จริง (ตรวจตัวเลขในสเปก D1–D7)
+```
+เทสต์รันทุกขั้น Validate → Transform → Integrate → Verify ผ่าน S3 จำลองในหน่วยความจำ มีทั้งกรณีผ่าน (เขียน `_SUCCESS.json`) และกรณีไม่ผ่าน (แถวหาย, มีคอลัมน์พิกัดเกินมา, จำนวนแถว raw ไม่ตรง: Verify ล้มและไม่ publish อะไร)
+
+ผลล่าสุด (12 พ.ย. 2026, Python 3.14, pyarrow 26):
+```
+python -m pytest tests                                  → 58 passed, 5 skipped (5 = เทสต์ไฟล์จริง)
+BHES_SAMPLE_DIR=... python -m pytest tests              → 63 passed
+```
+ผลกับไฟล์จริง: Happy Home 88 แถว ผ่าน 88 ถูกแยก 0; ภาระค่าไฟ high 35 / possibly_high 31 / low 22; ตัวเลขตรงกับตาราง "Threshold และเหตุผล" ในสเปกทุกข้อ
+
+**ทดสอบบน AWS จริง** (12 พ.ย. 2026, `ap-southeast-1`, หลัง `terraform apply`):
+
+| การรัน | ผล |
+|---|---|
+| `{"batch_id":"happy_home-26cba344f87c"}` | SUCCEEDED: CheckBatch → Validate → Transform → Integrate → Verify; ผ่าน 88 ถูกแยก 0; trusted/curated ตรงกับผลในเครื่องทุกช่อง |
+| batch เดิมซ้ำ | SUCCEEDED ที่ SkipDuplicate (ไม่เขียนซ้ำ) |
+| batch เดิม + `"force":true` | SUCCEEDED ผ่านทุกขั้นอีกรอบ ไฟล์ curated เหมือนเดิมทุก byte ไม่มีไฟล์ซ้ำ |
+| `{"batch_id":"sovi-7fb4858da401"}` | FAILED ที่ ValidationFailed (ยังไม่มีกฎของ SoVI) |
+| `"fail_at":"check_batch"` | FAILED ที่ CheckBatch ตามที่สั่ง |
+| Glue crawler + Athena | ได้ตาราง `happy_home_household` 1 ตาราง (38 คอลัมน์, ไม่รวม `_pipeline/`); `count(*)` = 88, burden_class 35 / 31 / 22, heat_impact_level 15 / 45 / 28 |
+
 ## 9. สถานะและการทำงาน
 | สถานะ | รายการ |
 |---|---|
-| ทำแล้ว | ข้อมูลสำรวจพร้อม (#13), ตรวจ codebook และ data dictionary (#14), Architecture diagram (#15) |
-| กำลังวางแผน | Terraform S3/IAM (#16), Ingestion (#18), Validate + Quarantine (#19), Transform → Trusted (#20), Idempotency (#21), Verify (#22), ตรวจการเชื่อม GEE (#23), นิยามตัวชี้วัด + SQL บน Athena (#24), QuickSight (#33, ทางเลือก), README และบันทึกการใช้ AI (#27), เตรียม Demo (#28) |
+| ทำแล้ว | ข้อมูลสำรวจพร้อม (#13), ตรวจ codebook และ data dictionary (#14), Architecture diagram (#15), Terraform (#16, #17), Ingestion (#18) |
+| ทำแล้ว รอรีวิว (ทดสอบบน AWS แล้ว) | Validate + Quarantine (#19), Transform → Trusted (#20), CheckBatch / Idempotency (#21), Verify (#22) |
+| กำลังวางแผน | ตรวจการเชื่อม GEE (#23), นิยามตัวชี้วัด + SQL บน Athena (#24), QuickSight (#33, ทางเลือก), README และบันทึกการใช้ AI (#27), เตรียม Demo (#28) |
 
 - ภาพ Architecture เป็นดีไซน์เป้าหมายของ Checkpoint ถ้าตอนสร้างจริงต่างจากภาพ ให้แก้ภาพตาม
 - งานติดตามใน GitHub Issues และ Project board ของ repo
