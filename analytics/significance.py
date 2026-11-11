@@ -39,7 +39,7 @@ def main():
     ap.add_argument("--write", action="store_true", help="also write analytics/results/significance.csv")
     args = ap.parse_args()
     R = args.results
-    q11 = {(r["feature"], r["level"]): r for r in rows(R, "q1_Q1_1.csv")}
+    q11 = {(r["feature"], r["level"]): r for r in rows(R, "q1/Q1_1.csv")}
     out = []
 
     def add(q, label, outcome, ga, gb):
@@ -60,16 +60,16 @@ def main():
     add("Q1", "หลังคาสังกะสี/เมทัลชีท vs อื่น ๆ", "ผลกระทบความร้อนสูง", hv("B4 หลังคา", "สังกะสี/เมทัลชีท"),
         hv("B4 หลังคา", "กระเบื้อง/คอนกรีต/อื่น ๆ/ไม่ระบุ (รวม)"))
     add("Q1", "ไม่มีฝ้า vs มีฝ้า/ไม่แน่ใจ", "ผลกระทบความร้อนสูง", hv("B6 ฝ้าเพดาน", "ไม่มีฝ้า"), hv("B6 ฝ้าเพดาน", "มีฝ้า/ไม่แน่ใจ (รวม)"))
-    q13 = {r["community_key"]: r for r in rows(R, "q1_Q1_3.csv")}
+    q13 = {r["community_key"]: r for r in rows(R, "q1/Q1_3.csv")}
     add("Q1", "ชุมชนหลังแฟลต vs คนรักถิ่น", "ผลกระทบความร้อนสูง",
         (num(q13["หลังแฟลต"]["n_high"]), num(q13["หลังแฟลต"]["n"])), (num(q13["คนรักถิ่น"]["n_high"]), num(q13["คนรักถิ่น"]["n"])))
-    q14 = {r["coping_limited"]: r for r in rows(R, "q1_Q1_4.csv")}
+    q14 = {r["coping_limited"]: r for r in rows(R, "q1/Q1_4.csv")}
     add("Q1", "รับมือได้จำกัด (coping_limited) vs ไม่จำกัด", "ผลกระทบความร้อนสูง",
         (num(q14["true"]["n_high"]), num(q14["true"]["n"])), (num(q14["false"]["n_high"]), num(q14["false"]["n"])))
-    q23 = {r["has_aircon"]: r for r in rows(R, "q2_Q2_3.csv")}
+    q23 = {r["has_aircon"]: r for r in rows(R, "q2/Q2_3.csv")}
     add("Q2", "ไม่มีแอร์ vs มีแอร์", "ภาระค่าไฟสูง (>=10%)", (num(q23["false"]["n_high"]), num(q23["false"]["n"])),
         (num(q23["true"]["n_high"]), num(q23["true"]["n"])))
-    q29 = {r["income_group"]: r for r in rows(R, "q2_Q2_9.csv")}
+    q29 = {r["income_group"]: r for r in rows(R, "q2/Q2_9.csv")}
     g = list(q29.values())
     add("Q2", "รายได้ไม่เกิน 10,000 vs มากกว่า 10,000", "ภาระค่าไฟสูง (>=10%)", (num(g[0]["n_high"]), num(g[0]["n"])),
         (num(g[1]["n_high"]) + num(g[2]["n_high"]), num(g[1]["n"]) + num(g[2]["n"])))

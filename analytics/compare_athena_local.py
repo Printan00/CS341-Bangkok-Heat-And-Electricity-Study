@@ -91,32 +91,32 @@ def main():
         "B8 ระบายอากาศ": ("ventilation", lambda v: v if v is not None else "(ไม่ระบุ/ไม่แน่ใจ)"),
         "B9 ร่มเงา": ("shade", lambda v: v if v is not None else "(ไม่ระบุ/ไม่แน่ใจ)"),
     }
-    for a in table(R, "q1_Q1_1.csv"):
+    for a in table(R, "q1/Q1_1.csv"):
         if a["feature"] in recode:
             key, f = recode[a["feature"]]
             sub = [d for d in rows if f(d[key]) == a["level"]]
             check_heat2("Q1.1 %s=%s" % (a["feature"], a["level"]), a, sub)
     def band(v):
         return "(null)" if v is None else ("0-1" if v <= 1 else ("2" if v == 2 else ("3" if v == 3 else "4-5")))
-    for a in table(R, "q1_Q1_2.csv"):
+    for a in table(R, "q1/Q1_2.csv"):
         sub = [d for d in rows if band(d["housing_heat_score"]) == a["housing_heat_score_band"]]
         check_heat2("Q1.2 band=%s" % a["housing_heat_score_band"], a, sub)
-    for a in table(R, "q1_Q1_4.csv"):
+    for a in table(R, "q1/Q1_4.csv"):
         sub = [d for d in rows if str(d["coping_limited"] if d["coping_limited"] is not None else "(null)").lower() == a["coping_limited"]]
         check_heat("Q1.4 coping=%s" % a["coping_limited"], a, sub)
-    for a in table(R, "q2_Q2_1.csv"):
+    for a in table(R, "q2/Q2_1.csv"):
         sub = [d for d in rows if (d["income_ord"] or 0) == int(a["income_ord"])]
         check_bur("Q2.1 income=%s" % a["income_ord"], a, sub, ranges=True)
-    for a in table(R, "q2_Q2_2.csv"):
+    for a in table(R, "q2/Q2_2.csv"):
         sub = [d for d in rows if (d["income_ord"] or 0) == int(a["income_ord"])]
         check_bur("Q2.2 income=%s (6%%)" % a["income_ord"], a, sub, key="burden_class_6")
-    for a in table(R, "q2_Q2_3.csv"):
+    for a in table(R, "q2/Q2_3.csv"):
         sub = [d for d in rows if str(d["has_aircon"] == 1).lower() == a["has_aircon"]]
         check_bur("Q2.3 aircon=%s" % a["has_aircon"], a, sub, ranges=True)
-    for a in table(R, "q2_Q2_4.csv"):
+    for a in table(R, "q2/Q2_4.csv"):
         sub = [d for d in rows if (d["income_ord"] or 0) == int(a["income_ord"]) and str(d["has_aircon"] == 1).lower() == a["has_aircon"]]
         check_bur("Q2.4 income=%s aircon=%s" % (a["income_ord"], a["has_aircon"]), a, sub)
-    for a in table(R, "q2_Q2_7.csv"):
+    for a in table(R, "q2/Q2_7.csv"):
         sub = [d for d in rows if str(d["has_fan"]) == a["has_fan"]]
         check_bur("Q2.7 fan=%s" % a["has_fan"], a, sub)
     print("compared %d visible cells, %d hidden (<5) skipped, %d mismatches" % (checked, skipped, bad))
