@@ -1,0 +1,3 @@
+"has_aircon","n","n_high","pct_high","n_possibly_high","pct_possibly_high","n_low","pct_low","n_burden_missing","pct_burden_missing","burden_min_lowest_pct","burden_min_median_pct","burden_max_median_pct","burden_max_highest_pct"
+"false","42","17","40.5","15","35.7","10","23.8","0","0.0","0.0","5.0","20.0","240.0"
+"true","46","18","39.1","16","34.8","12","26.1","0","0.0","1.0","5.0","20.0","240.0"

@@ -90,6 +90,8 @@
 README.md                      ภาพรวมโครงการ (ไฟล์นี้)
 architecture/                  Architecture diagram (.drawio.svg ต้นฉบับ + .png) และวิธีแก้ไข
 reports/                       data dictionary และรายการตัวแปร (เฉพาะค่ารวม ไม่มีข้อมูลรายแถว)
+analytics/                     SQL บน Athena ตอบ Q1–Q3 (q1_/q2_/q3_*.sql), ผลลัพธ์ที่ซ่อน n<5 (results/), สคริปต์ตรวจซ้ำกับไฟล์ดิบ (recheck_local.py, compare_athena_local.py) และ significance.py
+reports/q1_q3_findings.md      สรุปผลวิเคราะห์ Q1–Q3 สนับสนุน/ขัดแย้ง/ยังไม่เพียงพอ พร้อมข้อจำกัด
 scripts/profile_codebook.py    สคริปต์ตรวจ codebook รันซ้ำได้
 scripts/gee_lst.py             LST ระดับชุมชนจาก Landsat ผ่าน Earth Engine (ทางเลือก ต้อง authenticate)
 scripts/ingest.py              นำไฟล์จาก data/ เข้า S3 raw/ พร้อม metadata (รันซ้ำไม่เกิดข้อมูลซ้ำ)

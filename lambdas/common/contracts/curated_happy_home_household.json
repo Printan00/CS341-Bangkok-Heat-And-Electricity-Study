@@ -155,6 +155,96 @@
    "description": "C2.8 for analysis: null when blank, not a questionnaire answer, or unsure (T02)"
   },
   {
+   "name": "b1_housing_type_clean",
+   "type": "string",
+   "nullable": true,
+   "description": "B1 for analysis: null when blank, not a questionnaire answer, or unsure (T02)"
+  },
+  {
+   "name": "b3_wall_material_clean",
+   "type": "string",
+   "nullable": true,
+   "description": "B3 for analysis: null when blank, not a questionnaire answer, or unsure (T02)"
+  },
+  {
+   "name": "b4_roof_material_clean",
+   "type": "string",
+   "nullable": true,
+   "description": "B4 for analysis: null when blank, not a questionnaire answer, or unsure (T02)"
+  },
+  {
+   "name": "b6_ceiling_clean",
+   "type": "string",
+   "nullable": true,
+   "description": "B6 for analysis: null when blank, not a questionnaire answer, or unsure (T02)"
+  },
+  {
+   "name": "b7_insulation_clean",
+   "type": "string",
+   "nullable": true,
+   "description": "B7 for analysis: null when blank, not a questionnaire answer, or unsure (T02)"
+  },
+  {
+   "name": "b8_ventilation_clean",
+   "type": "string",
+   "nullable": true,
+   "description": "B8 for analysis: null when blank, not a questionnaire answer, or unsure (T02)"
+  },
+  {
+   "name": "b9_shade_clean",
+   "type": "string",
+   "nullable": true,
+   "description": "B9 for analysis: null when blank, not a questionnaire answer, or unsure (T02)"
+  },
+  {
+   "name": "c2_1_heat_level_clean",
+   "type": "string",
+   "nullable": true,
+   "description": "C2.1 for analysis: null when blank, not a questionnaire answer, or unsure (T02)"
+  },
+  {
+   "name": "household_size_band",
+   "type": "string",
+   "nullable": true,
+   "description": "T03 A12 as a band (a whole number is put into its band)"
+  },
+  {
+   "name": "e1_3_summer_bill_increase_clean",
+   "type": "string",
+   "nullable": true,
+   "description": "E1.3 for analysis: null when blank, not a questionnaire answer, or unsure (T02)"
+  },
+  {
+   "name": "e2_1_fan",
+   "type": "int8",
+   "nullable": true,
+   "description": "E2.1 option 'พัดลม' selected (1/0)"
+  },
+  {
+   "name": "b12_costly",
+   "type": "int8",
+   "nullable": true,
+   "description": "B12 option 'วัสดุ/ช่างมีราคาแพง' selected (1/0)"
+  },
+  {
+   "name": "b12_renter_no_say",
+   "type": "int8",
+   "nullable": true,
+   "description": "B12 option 'บ้านเช่า/ไม่มีสิทธิ์ตัดสินใจ' selected (1/0)"
+  },
+  {
+   "name": "b12_limited_space",
+   "type": "int8",
+   "nullable": true,
+   "description": "B12 option 'พื้นที่จำกัด' selected (1/0)"
+  },
+  {
+   "name": "b12_dont_know_how",
+   "type": "int8",
+   "nullable": true,
+   "description": "B12 option 'ไม่รู้จะปรับอย่างไร' selected (1/0)"
+  },
+  {
    "name": "housing_heat_score",
    "type": "int8",
    "nullable": true,
