@@ -16,3 +16,7 @@ data/
 crash.log
 tfplan
 .build/
+
+# Python
+__pycache__/
+.venv/
