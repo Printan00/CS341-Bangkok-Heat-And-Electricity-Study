@@ -115,6 +115,13 @@ Region: `ap-southeast-1` (Singapore) ต้องตั้ง AWS CLI credential
 
 ทุก bucket เปิด Block Public Access ครบ 4 ข้อ
 
+| IAM | ใช้โดย | สิทธิ์ |
+|---|---|---|
+| `bhes-lambda` (role) | Lambda ทุกขั้น | อ่าน `raw/` อย่างเดียว (เขียน/ลบไม่ได้), อ่าน/เขียน `quarantine/` `trusted/` `curated/`, CloudWatch Logs |
+| `bhes-sfn` (role) | Step Functions | เรียก Lambda ชื่อ `bhes-*` |
+| `bhes-glue-crawler` (role) | Glue Crawler | อ่าน `curated/` อย่างเดียว |
+| `bhes-athena-query` (policy) | ผู้ใช้ / QuickSight ที่จะ query | Athena workgroup `bhes-*`, อ่าน Glue catalog + `curated/`, เขียนผลลง athena-results bucket |
+
 **ครั้งแรกเท่านั้น: สร้าง bucket สำหรับ state** (ทำแล้วสำหรับ account ของทีม)
 ```bash
 B=bhes-tfstate-<account_id>; R=ap-southeast-1
