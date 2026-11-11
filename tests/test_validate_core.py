@@ -25,3 +25,9 @@ def test_suppress_hides_counts_between_one_and_four():
 def test_quarantine_rate_above_threshold_fails_batch():
     assert quarantine_rate_violation(2, 10, 0.10).rule_id == "B06"
     assert quarantine_rate_violation(1, 10, 0.10) is None
+
+
+def test_decimals_counts_digits_as_written_and_ignores_binary_noise():
+    from core import decimals
+    assert [decimals(v) for v in (13.734, 14.0, 100, "13.73", 13.734000000000002, 13.7345678, None, "x")] == \
+        [3, 0, 0, 2, 3, 7, 0, 0]

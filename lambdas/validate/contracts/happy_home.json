@@ -9,7 +9,8 @@
    "allowed_values C1.3: export uses '1–2 ปี' while .docx says '1–2 ปีที่ผ่านมา'; both accepted",
    "community_map: 7 single-character labels are deliberately NOT mapped (possible third community มิตรประชา)"
   ],
-  "multiselect_overrides": "C1.11 and C2.8 share the follow-up label; option columns split per the .docx option lists"
+  "multiselect_overrides": "C1.11 and C2.8 share the follow-up label; option columns split per the .docx option lists",
+  "coord_max_decimals": "B01: latitude/longitude in the data must have at most this many decimals (matches Settings GPS_DECIMALS)"
  },
  "data_sheet": "Data",
  "required_sheets": [
@@ -1014,6 +1015,7 @@
   100.3,
   100.9
  ],
+ "coord_max_decimals": 3,
  "exclusive_none": [
   {
    "none": "A9. ในช่วง 12 เดือนที่ผ่านมา ครัวเรือนมีค่าใช้จ่ายเพิ่มจากเรื่องใดบ้าง (ตอบได้มากกว่า 1 ข้อ)/ไม่มี",

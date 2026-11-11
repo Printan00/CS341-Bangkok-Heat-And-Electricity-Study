@@ -57,6 +57,13 @@ def test_r06_flag_set_but_option_missing_from_text_is_rejected():
     assert hit(hh.check_multiselect(t, C)) == {("R06", "HH-000000")}
 
 
+def test_r06_option_must_appear_as_a_whole_option_not_inside_another():
+    # A19 has both "จักรยาน" and "จักรยานยนต์"; options are separated by spaces and may contain spaces
+    t = tbl(**{"Q": ["จักรยานยนต์", "จักรยาน จักรยานยนต์", "อื่น ๆ จักรยาน"],
+               "Q/จักรยาน": [1, 1, 1], "Q/จักรยานยนต์": [0, 1, 0], "Q/อื่น ๆ": [0, 0, 1]})
+    assert hit(hh.check_multiselect(t, C)) == {("R06", "HH-000000")}
+
+
 def test_r06_contract_can_split_two_questions_that_share_a_follow_up_label():
     c = dict(C, multiselect_overrides={"P": ["P/ยกพื้น"], "P.1": ["P/ติดกันสาด", "P/อื่น ๆ.1"]})
     t = tbl(**{"P": ["ยกพื้น", None], "P.1": [None, "ติดกันสาด อื่น ๆ"],

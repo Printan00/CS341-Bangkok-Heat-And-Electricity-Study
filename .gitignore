@@ -17,6 +17,6 @@ crash.log
 tfplan
 .build/
 
-# Python (bytecode from test runs would otherwise be zipped into the Lambda packages)
+# Python (note: .gitignore does not stop terraform from zipping a local __pycache__)
 __pycache__/
 .venv/

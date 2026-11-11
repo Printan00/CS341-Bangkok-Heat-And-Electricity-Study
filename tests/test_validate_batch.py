@@ -1,8 +1,11 @@
 """Batch-level rules (B01-B06) and the per-batch report, on synthetic workbooks."""
 import json
+import re
+
+import pytest
 
 import happy_home as hh
-from xlsx_helper import xlsx_bytes
+from xlsx_helper import rezip, xlsx_bytes
 
 COLS = ["household_code", "ชื่อชุมชน"]
 
@@ -53,9 +56,70 @@ def test_b01_gps_precision_above_contract_stops_batch():
     assert "B01" in rule_ids(r.batch_violations) and r.passed is None
 
 
+@pytest.mark.parametrize("settings_rows", [[], [["setting"]], [["setting"], ["GPS_MODE"]]],
+                         ids=["empty", "one_column", "one_column_with_rows"])
+def test_b01_settings_sheet_without_setting_value_columns_stops_batch(settings_rows):
+    data = xlsx_bytes({"Data": [COLS] + [["HH-%06d" % i, "หลังแฟลต"] for i in range(4)], "Settings": settings_rows})
+    r = hh.validate(data, contract(), batch_id="t")
+    assert r.status == "failed" and "B01" in rule_ids(r.batch_violations) and r.passed is None
+
+
+GEO = COLS + ["lat", "lon"]
+
+
+def geo_contract():
+    return contract(columns=GEO, lat_column="lat", lon_column="lon", bbox=[13.5, 14.1, 100.3, 100.9],
+                    coord_max_decimals=3)
+
+
+def test_b01_coordinates_with_more_decimals_than_allowed_stop_batch_even_if_settings_say_rounded():
+    rows = [["HH-%06d" % i, "หลังแฟลต", 13.734, 100.512] for i in range(4)]
+    rows[2][2] = 13.73456  # Settings still say GPS_DECIMALS = 3
+    r = hh.validate(book(rows, GEO), geo_contract(), batch_id="t")
+    assert r.status == "failed" and "B01" in rule_ids(r.batch_violations) and r.passed is None
+    assert "13.73456" not in json.dumps(r.report())
+
+
+def test_b01_coordinates_within_allowed_decimals_pass():
+    rows = [["HH-%06d" % i, "หลังแฟลต", 13.73, 100.5] for i in range(2)] + [
+        ["HH-000002", "หลังแฟลต", 13.734000000000002, 100.512],  # binary noise from rounding, still 3 decimals
+        ["HH-000003", "หลังแฟลต", None, 14.0]]
+    r = hh.validate(book(rows, GEO), geo_contract(), batch_id="t")
+    assert "B01" not in rule_ids(r.batch_violations)
+
+
 def test_b02_missing_sheet_stops_batch():
     r = hh.validate(book(sheets=("Data",)), contract(), batch_id="t")
     assert "B02" in rule_ids(r.batch_violations) and r.status == "failed"
+
+
+@pytest.mark.parametrize("data", [
+    b"",                                                              # empty upload
+    "household_code,ชื่อชุมชน\nHH-000001,หลังแฟลต\n".encode(),        # a CSV renamed to .xlsx
+    None,                                                             # truncated upload (filled in below)
+    "no_workbook",                                                    # zip without xl/workbook.xml
+    "broken_xml",                                                     # workbook.xml is not valid XML
+    "bad_shared_string",                                              # cell points past the shared strings
+    "bad_number",                                                     # number cell holding text
+], ids=["empty", "csv", "truncated", "no_workbook", "broken_xml", "bad_shared_string", "bad_number"])
+def test_b02_unreadable_file_stops_batch_with_report_and_no_rows(data):
+    good = book()
+    sheet = "xl/worksheets/sheet1.xml"
+    first_cell = lambda body, new: re.sub(rb'<c r="A2"[^>]*?(/>|>.*?</c>)', new, body, count=1)
+    sst = b'<sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="0" uniqueCount="0"/>'
+    data = {None: good[: len(good) // 2],
+            "no_workbook": rezip(good, edit={"xl/workbook.xml": lambda b: None}),
+            "broken_xml": rezip(good, edit={"xl/workbook.xml": lambda b: b"<workbook"}),
+            "bad_shared_string": rezip(good, edit={sheet: lambda b: first_cell(b, b'<c r="A2" t="s"><v>7</v></c>')},
+                                       add={"xl/sharedStrings.xml": sst}),
+            "bad_number": rezip(good, edit={sheet: lambda b: first_cell(b, b'<c r="A2"><v>abc</v></c>')}),
+            }.get(data, data)
+    r = hh.validate(data, contract(), batch_id="t")
+    assert r.status == "failed" and rule_ids(r.batch_violations) == {"B02"}
+    assert r.passed is None and r.quarantine is None
+    rep = r.report()
+    assert rep["status"] == "failed" and rep["batch_rules"][0]["rule_id"] == "B02"
+    assert "HH-000001" not in json.dumps(rep, ensure_ascii=False)
 
 
 def test_b03_changed_column_order_stops_batch():

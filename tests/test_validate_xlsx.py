@@ -1,5 +1,7 @@
 """The standard-library .xlsx reader used inside the Lambda."""
-from xlsx_helper import xlsx_bytes
+import re
+
+from xlsx_helper import rezip, xlsx_bytes
 
 import xlsx
 
@@ -15,6 +17,13 @@ def test_reads_sheets_in_order_with_typed_values_and_blanks():
     assert t.header == ["id", "name", "n", "x", "ok"]
     assert t.rows[0] == {"id": "HH-1", "name": "หลังแฟลต", "n": 3, "x": 2.75, "ok": True}
     assert t.rows[1] == {"id": "HH-2", "name": None, "n": None, "x": 2, "ok": False}
+
+
+def test_cells_without_a_position_attribute_are_read_in_order():
+    # Excel always writes r="B2"; some other tools leave it out, which the format allows
+    data = xlsx_bytes({"Data": [["id", "name", "n"], ["HH-1", "หลังแฟลต", 3]]})
+    no_refs = rezip(data, edit={"xl/worksheets/sheet1.xml": lambda b: re.sub(rb' r="[A-Z]+[0-9]+"', b"", b)})
+    assert xlsx.read_workbook(no_refs)["Data"] == xlsx.read_workbook(data)["Data"]
 
 
 def test_header_names_are_made_unique_like_the_contract_expects():

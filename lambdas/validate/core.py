@@ -5,11 +5,18 @@ Rules are specified in reports/validation_rules.md. Standard library only.
 import hashlib
 import json
 import re
+import zipfile
+import zlib
 from dataclasses import asdict, dataclass
+from decimal import Decimal
 from pathlib import Path
+from xml.etree.ElementTree import ParseError
 
 K_MIN = 5  # counts below this are shown as "<5" in reports
 CONTRACT_DIR = Path(__file__).parent / "contracts"
+# Errors read_workbook raises on a file that is not a usable .xlsx (B02): not a zip, missing or broken XML,
+# a cell pointing past the shared strings (IndexError), a number cell holding text (ValueError)
+UNREADABLE = (zipfile.BadZipFile, KeyError, ParseError, zlib.error, EOFError, IndexError, ValueError)
 
 
 @dataclass
@@ -72,6 +79,18 @@ def to_number(v):
 
 def flag_on(v):
     return to_number(v) == 1
+
+
+def decimals(v):
+    """Digits after the decimal point (13.734 -> 3, 14.0 -> 0); 0 if not a number.
+
+    Rounds to 9 places first so binary noise in a stored value (13.734000000000002) is not counted;
+    raw GPS has 6-8 decimals, so it is still caught.
+    """
+    n = to_number(v)
+    if n is None or n != n or n in (float("inf"), float("-inf")):
+        return 0
+    return max(0, -Decimal(repr(round(n, 9))).normalize().as_tuple().exponent)
 
 
 # ---------- violations and row split ----------
@@ -166,7 +185,9 @@ def structure_checks(sheets, c):
     if leaked:
         out.append(batch_violation("B01", "FAIL", "forbidden column(s) present: %s" % ", ".join(leaked)))
     settings = sheets.get(c.get("settings_sheet"))
-    if settings is not None:
+    if settings is not None and len(settings.header) < 2:
+        out.append(batch_violation("B01", "FAIL", "anonymisation settings sheet has no setting/value columns"))
+    elif settings is not None:
         key_col, val_col = settings.header[0], settings.header[1]
         values = {str(r[key_col]): r[val_col] for r in settings.rows}
         for key, rule in c.get("settings_rules", {}).items():
@@ -175,6 +196,13 @@ def structure_checks(sheets, c):
                 and ("max" not in rule or (to_number(v) is not None and to_number(v) <= rule["max"]))
             if not ok:
                 out.append(batch_violation("B01", "FAIL", "anonymisation setting %s not as contracted" % key))
+    # Do not trust the settings alone: the coordinates in the data must really be rounded
+    if data is not None and "coord_max_decimals" in c:
+        cols = [c[k] for k in ("lat_column", "lon_column") if c.get(k) in header]
+        n = sum(1 for r in data.rows if any(decimals(r.get(col)) > c["coord_max_decimals"] for col in cols))
+        if n:
+            out.append(batch_violation("B01", "FAIL", "coordinates with more than %d decimals in %s rows"
+                                       % (c["coord_max_decimals"], suppress(n))))
     missing = [s for s in c["required_sheets"] if s not in sheets]
     if missing:
         out.append(batch_violation("B02", "FAIL", "missing sheet(s): %s" % ", ".join(missing)))
@@ -194,7 +222,11 @@ def run_batch(source, data, c, row_checks, enrich, batch_id=None):
 
     sha = hashlib.sha256(data).hexdigest()
     batch_id = batch_id or sha[:12]
-    sheets = read_workbook(data)
+    try:
+        sheets = read_workbook(data)
+    except UNREADABLE as e:  # not an .xlsx, truncated upload, or broken workbook: report it as B02
+        msg = "file is not a readable .xlsx (%s)" % type(e).__name__
+        return BatchResult(source, batch_id, sha, "failed", [batch_violation("B02", "FAIL", msg)], [])
     batch = structure_checks(sheets, c)
     if any(v.severity == "FAIL" for v in batch):
         return BatchResult(source, batch_id, sha, "failed", batch, [])

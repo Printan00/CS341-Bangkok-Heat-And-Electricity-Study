@@ -69,9 +69,11 @@ def unique_header(raw):
 def _sheet_rows(xml, shared):
     rows = []
     for r in ET.fromstring(xml).iterfind("m:sheetData/m:row", NS):
-        cells = {}
+        cells, pos = {}, -1
         for c in r.iterfind("m:c", NS):
-            cells[_col_index(c.get("r"))] = _cell_value(c, shared)
+            ref = c.get("r")  # optional in the format: without it, a cell is the next column
+            pos = _col_index(ref) if ref else pos + 1
+            cells[pos] = _cell_value(c, shared)
         width = max(cells) + 1 if cells else 0
         rows.append([cells.get(i) for i in range(width)])
     return rows

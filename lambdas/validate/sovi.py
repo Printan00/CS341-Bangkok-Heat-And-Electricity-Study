@@ -1,4 +1,4 @@
-"""SoVI V8 rules. See reports/validation_rules.md §4.2 and §5."""
+"""SoVI V8 rules. See reports/validation_rules.md §5-§6."""
 import re
 
 from core import Table, duplicate_content_mask, flag, is_blank, load_contract, norm_label, run_batch, text, to_number

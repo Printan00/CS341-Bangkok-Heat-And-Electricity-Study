@@ -63,11 +63,37 @@ def test_bad_row_is_written_to_quarantine_with_its_reasons():
     assert [(v["rule_id"], v["record_id"], v["source_row"]) for v in violations] == [("R03", "HH-000002", "3")]
 
 
-def test_privacy_failure_is_invalid_and_writes_only_the_report():
+def test_privacy_failure_is_invalid_and_keeps_no_rows():
     result, s3 = run([["HH-000001", "หลังแฟลต", "12/3"]], header=("household_code", "ชื่อชุมชน", "บ้านเลขที่"))
     assert result["valid"] is False
-    written = sorted(k for k in s3.objects if k.startswith("quarantine/"))
-    assert written == [OUT + "dq_report.json"]
+    assert s3.objects[OUT + "rows.jsonl"] == b""
+    manifest = json.loads(s3.objects[OUT + "manifest.json"])
+    assert manifest["status"] == "failed" and manifest["passed"] == [] and manifest["quarantined"] == []
+    assert b"12/3" not in b"".join(v for k, v in s3.objects.items() if k.startswith(OUT))
+
+
+def test_rerun_that_stops_at_batch_level_replaces_the_previous_run_outputs():
+    s3 = FakeS3({RAW: xlsx_bytes({"Data": [["household_code", "ชื่อชุมชน"], ["HH-000001", "หลังแฟลต"]]})})
+    first = handler.run({"batch_id": "b1"}, s3=s3, bucket="lake", contracts={"happy_home": HH_CONTRACT})
+    assert first["valid"] is True
+    assert json.loads(s3.objects[OUT + "manifest.json"])["status"] == "passed"
+    stricter = dict(HH_CONTRACT, columns=HH_CONTRACT["columns"] + ["new_column"])  # contract changed later
+    second = handler.run({"batch_id": "b1"}, s3=s3, bucket="lake", contracts={"happy_home": stricter})
+    assert second["valid"] is False
+    manifest = json.loads(s3.objects[OUT + "manifest.json"])
+    assert manifest["status"] == "failed" and manifest["passed"] == []
+    assert s3.objects[OUT + "rows.jsonl"] == b""
+    violations = list(csv.DictReader(io.StringIO(s3.objects[OUT + "violations.csv"].decode("utf-8-sig"))))
+    assert [v["rule_id"] for v in violations] == ["B03"]
+
+
+def test_unreadable_file_is_invalid_with_a_b02_report():
+    s3 = FakeS3({RAW: b"this is not an xlsx file"})
+    result = handler.run({"batch_id": "b1"}, s3=s3, bucket="lake", contracts={"happy_home": HH_CONTRACT})
+    assert result["valid"] is False
+    assert json.loads(s3.objects[OUT + "manifest.json"])["passed"] == []
+    report = json.loads(s3.objects[OUT + "dq_report.json"])
+    assert [b["rule_id"] for b in report["batch_rules"]] == ["B02"]
 
 
 def test_ingest_layout_only_the_batch_source_is_checked():

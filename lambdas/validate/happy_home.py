@@ -1,4 +1,4 @@
-"""Happy Home (ThaiCI household survey) rules. See reports/validation_rules.md §3-§5."""
+"""Happy Home (ThaiCI household survey) rules. See reports/validation_rules.md §4-§6."""
 import re
 
 from core import (Table, duplicate_content_mask, flag, flag_on, is_blank, load_contract, norm_label, run_batch,
@@ -110,6 +110,11 @@ def _is_grid(kids):
     return set(kids) == set(HAZARDS)
 
 
+def _has_option(answer, label):
+    """Is `label` one of the space-separated options in `answer`? ("จักรยาน" is not in "จักรยานยนต์")."""
+    return re.search(r"(?:^|\s)%s(?=\s|$)" % re.escape(label), answer) is not None
+
+
 def check_multiselect(t, c):
     out = []
     for parent, kids in _children(t, c).items():
@@ -121,7 +126,7 @@ def check_multiselect(t, c):
             nums = {label: to_number(r.get(col)) for label, col in kids.items()}
             nonbinary = any(n is not None and n not in (0, 1) for n in nums.values())
             on = [label for label, n in nums.items() if n == 1]
-            mismatch = any(label not in answer for label in on) or (answer != "") != bool(on)
+            mismatch = any(not _has_option(answer, label) for label in on) or (answer != "") != bool(on)
             bad.append(nonbinary or mismatch)
         out += _f(t, c, bad, "R06", "FAIL", parent, "multi-select flags not 0/1 or not matching answer text")
     return out
