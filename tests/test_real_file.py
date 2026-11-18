@@ -4,6 +4,7 @@ Runs only with BHES_SAMPLE_DIR set (the survey file is never committed). Only to
 asserted here, no household ids or coordinates.
 """
 import hashlib
+import random
 import statistics
 from collections import Counter
 
@@ -15,6 +16,7 @@ from integrate import scoring
 from integrate.handler import handler as integrate
 from transform.handler import handler as transform
 from validate.handler import handler as validate
+from stats_helper import dirichlet_ones, permutation_p, spearman
 from validate.rules import required_columns
 from verify.handler import handler as verify
 
@@ -125,3 +127,65 @@ def test_every_scored_answer_in_the_real_file_is_in_the_tables(run):
     for code, table in scoring.ANSWER_SCORES.items():
         seen = {t[scoring.COLUMN[code]] for t in trusted} - {None}
         assert seen <= set(table), (code, seen - set(table))
+
+
+# ---------- sections 5.2-5.4: correlations, weight test and the E2.6 check ----------
+
+GROUPS = ["heat_risk", "housing_risk", "finance_risk", "burden_risk", "coping_risk"]
+
+
+def test_group_correlations_match_the_spec(risk):
+    want = {("heat_risk", "housing_risk"): 0.12, ("heat_risk", "finance_risk"): 0.00,
+            ("heat_risk", "burden_risk"): 0.05, ("heat_risk", "coping_risk"): -0.03,
+            ("housing_risk", "finance_risk"): 0.22, ("housing_risk", "burden_risk"): 0.21,
+            ("housing_risk", "coping_risk"): 0.01, ("finance_risk", "burden_risk"): 0.53,
+            ("finance_risk", "coping_risk"): 0.28, ("burden_risk", "coping_risk"): 0.09}
+    got = {pair: round(spearman([r[pair[0]] for r in risk], [r[pair[1]] for r in risk]), 2) for pair in want}
+    assert got == want
+    assert max(abs(v) for v in got.values()) == 0.53  # finance-burden, the largest after income was dropped
+
+
+def top_group(scores, k):
+    order = sorted(range(len(scores)), key=lambda i: -scores[i])
+    return set(order[:k])
+
+
+def test_top_group_is_fairly_stable_under_random_weights(risk):
+    """5.3: 5,000 Dirichlet(1,1,1,1,1) weightings; the spec reports about 72% overlap with the equal-weight top 18.
+
+    The spec's script and its seed are gone, so this checks a band around the published numbers, not the numbers.
+    """
+    rng = random.Random(20260718)
+    scores = [[r[g] for g in GROUPS] for r in risk]
+    equal = top_group([sum(row) for row in scores], 18)
+    overlaps, times_in = [], [0] * len(risk)
+    for _ in range(5000):
+        w = dirichlet_ones(5, rng)
+        top = top_group([sum(a * b for a, b in zip(w, row)) for row in scores], 18)
+        overlaps.append(len(top & equal) / 18)
+        for i in top:
+            times_in[i] += 1
+    assert 0.68 <= statistics.fmean(overlaps) <= 0.76
+    assert 0.44 <= sorted(overlaps)[len(overlaps) // 20] <= 0.56  # the 5th percentile, spec 50%
+    share = [t / 5000 for t in times_in]
+    assert sum(share[i] >= 0.5 for i in equal) in (14, 15, 16)  # spec: 15 of the 18
+    assert sum(share[i] >= 0.8 for i in equal) in (5, 6, 7)  # spec: 6 of the 18
+    assert not any(share[i] > 0.5 for i in range(len(risk)) if i not in equal)  # nobody outside moves in
+
+
+def test_score_tracks_having_cut_back_electricity_use_e2_6(risk, run):
+    """5.4: E2.6 is not in the formula; households that cut use for the bill score higher, with or without burden."""
+    _, trusted, _, _ = run
+    cut = {t["household_code"]: t["e2_6_cut_use_clean"] for t in trusted}
+    yes = [r for r in risk if cut[r["household_code"]] == "เคย"]
+    no = [r for r in risk if cut[r["household_code"]] == "ไม่เคย"]
+    assert (len(yes), len(no)) == (38, 50)
+    mean = statistics.fmean
+    assert (round(mean(r["risk_score"] for r in yes), 1), round(mean(r["risk_score"] for r in no), 1)) == (53.3, 44.4)
+
+    def without_burden(r):
+        return 100 * mean(r[g] for g in GROUPS if g != "burden_risk")
+
+    assert (round(mean(map(without_burden, yes)), 1), round(mean(map(without_burden, no)), 1)) == (49.3, 42.3)
+    assert permutation_p([r["risk_score"] for r in yes], [r["risk_score"] for r in no]) < 0.01  # spec p = 0.003
+    assert permutation_p(list(map(without_burden, yes)), list(map(without_burden, no))) < 0.03  # spec p = 0.011
