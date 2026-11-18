@@ -1,13 +1,20 @@
-"""Integrate step: trusted Happy Home rows -> the household analysis table for Q1-Q3 (T13 risk score).
+"""Integrate step: trusted Happy Home rows -> two curated tables.
 
-Writes curated/_pipeline/staging/<batch_id>/happy_home_household.parquet; Verify checks it and only
-then publishes it to curated/happy_home_household/. The two surveys are not joined per household
+1. happy_home_household: the household analysis table for Q1-Q3 (T13 risk score, weights D7).
+   Columns: contracts/curated_happy_home_household.json.
+2. happy_home_risk: the five-group risk score (reports/risk_score_formulas.md), formulas in scoring.py.
+   Columns: contracts/curated_happy_home_risk.json. Added next to the T13 columns, which stay until the
+   team decides whether to drop them.
+
+Both go to curated/_pipeline/staging/<batch_id>/<table>.parquet; Verify checks them and only then
+publishes them to curated/<table>/. The two surveys are not joined per household
 (different years, areas and income bands), so SoVI is compared at group level later (#24).
-Columns: contracts/curated_happy_home_household.json.
 """
 from common import lake, parquet
+from integrate.scoring import ranks, risk_rows
 
 TABLE = "happy_home_household"
+RISK_TABLE = "happy_home_risk"
 BURDEN_SCORE = {"high": 1.0, "possibly_high": 0.5, "low": 0.0}
 
 
@@ -18,15 +25,6 @@ def risk(row, burden_weight):
         return None
     heat, housing, burden, coping = parts
     return round(heat / 13 + housing / 5 + burden_weight * BURDEN_SCORE[burden] + coping / 6, 6)
-
-
-def ranks(scores):
-    """1 = highest score; equal scores share a rank (1, 2, 2, 4). None stays None."""
-    ordered = sorted((s for s in scores if s is not None), reverse=True)
-    first = {}
-    for i, s in enumerate(ordered, start=1):
-        first.setdefault(s, i)
-    return [first[s] if s is not None else None for s in scores]
 
 
 def curated_rows(trusted, schema):
@@ -52,10 +50,15 @@ def run(batch_id):
     rows = curated_rows(trusted, schema)
     key = lake.staging_key(batch_id, TABLE)
     lake.put_bytes(key, parquet.to_bytes(rows, schema))
+    risk_schema = lake.contract("curated_happy_home_risk")
+    income_bands = [b[0] for b in lake.contract("happy_home")["income_bands"]]
+    lake.put_bytes(lake.staging_key(batch_id, RISK_TABLE),
+                   parquet.to_bytes(risk_rows(trusted, income_bands, risk_schema), risk_schema))
     return key, len(rows)
 
 
 def handler(event, context):
     lake.force_fail(event, "integrate")
     key, n = run(event["batch_id"])
-    return {**event, "curated_staging_key": key, "curated_rows": n}
+    return {**event, "curated_staging_key": key, "risk_staging_key": lake.staging_key(event["batch_id"], RISK_TABLE),
+            "curated_rows": n}

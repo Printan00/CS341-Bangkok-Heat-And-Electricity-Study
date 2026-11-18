@@ -225,8 +225,8 @@ bucket state (`bhes-tfstate-<ACCOUNT_ID>`) ลบด้วยมือเมื�
 |---|---|---|
 | Validate | `lambdas/validate/` | `quarantine/<source>/<batch_id>/` : `dq_report.json`, `violations.csv`, `rows.jsonl` (แถวที่ถูกแยก), `manifest.json` |
 | Transform | `lambdas/transform/` | `trusted/happy_home/batch_id=<batch_id>/part-0.parquet` (ไม่มีพิกัด ชื่อ หรือรหัสผู้สัมภาษณ์) |
-| Integrate | `lambdas/integrate/` | `curated/_pipeline/staging/<batch_id>/happy_home_household.parquet` (รวม risk score T13) |
-| Verify | `lambdas/verify/` | ผ่าน: `curated/happy_home_household/part-0.parquet` + `curated/_pipeline/success/<batch_id>/_SUCCESS.json`; ไม่ผ่าน: workflow ล้มพร้อมเหตุผล ไม่ publish |
+| Integrate | `lambdas/integrate/` | `curated/_pipeline/staging/<batch_id>/happy_home_household.parquet` (รวม risk score T13) และ `happy_home_risk.parquet` (คะแนน 5 หมวด, [สูตร](reports/risk_score_formulas.md)) |
+| Verify | `lambdas/verify/` | ผ่าน: `curated/happy_home_household/part-0.parquet` + `curated/happy_home_risk/part-0.parquet` + `curated/_pipeline/success/<batch_id>/_SUCCESS.json`; ไม่ผ่าน: workflow ล้มพร้อมเหตุผล ไม่ publish |
 | CheckBatch | `lambdas/check_batch/` | อ่านอย่างเดียว: เจอ `_SUCCESS.json` ของ batch นั้นแล้วข้ามไป SkipDuplicate |
 
 - **รัน batch เดิมซ้ำ:** ไม่เขียนอะไรซ้ำ batch ที่ล้มกลางทางไม่มี `_SUCCESS.json` จึงรันใหม่ได้ ทุกขั้นเขียนทับ key เดิม

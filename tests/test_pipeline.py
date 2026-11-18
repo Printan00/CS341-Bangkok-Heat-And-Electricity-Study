@@ -2,6 +2,7 @@
 import csv
 import io
 import json
+import math
 
 import pytest
 
@@ -188,6 +189,33 @@ def test_ranks_share_ties():
     assert ranks([0.5, 2.0, None, 2.0, 1.0]) == [4, 1, None, 1, 3]
 
 
+# ---------- Integrate: five-group score table (reports/risk_score_formulas.md) ----------
+
+RISK = "happy_home_risk"
+
+
+def test_integrate_writes_the_five_group_table_for_an_ordinary_household(s3):
+    _until_integrate(s3, town(4))
+    rows = table(s3, lake.staging_key(BATCH, RISK))
+    assert len(rows) == 4
+    r = rows[0]
+    assert list(r) == [c["name"] for c in lake.contract("curated_happy_home_risk")["columns"]]
+    middle = math.sqrt(1001 / 20000 * 2000 / 10001)  # ordinary answers: income 10,001-20,000, summer bill 1,001-2,000
+    assert r["heat_risk"] == pytest.approx((2 / 3 + 1 / 5 + 1 / 2 + 0 + 0 + 1) / 6, abs=1e-6)
+    assert (r["housing_risk"], r["finance_risk"]) == (0.0, 0.0)
+    assert r["burden_risk"] == pytest.approx(middle / 0.2, abs=1e-6)
+    assert r["coping_risk"] == pytest.approx(0.5 / 3, abs=1e-6)
+    groups = [r[g] for g in ("heat_risk", "housing_risk", "finance_risk", "burden_risk", "coping_risk")]
+    assert r["risk_score"] == pytest.approx(100 * sum(groups) / 5, abs=1e-4)
+    assert r["risk_quadrant"] == "low_heat_coping" and r["batch_id"] == BATCH and r["source_row"] == 2
+
+
+def test_integrate_keeps_the_old_score_columns_until_the_team_decides(s3):
+    _until_integrate(s3, town(2))
+    old = table(s3, lake.staging_key(BATCH, "happy_home_household"))[0]
+    assert "risk_score" in old and "risk_rank" in old
+
+
 # ---------- Verify (#22) ----------
 
 def test_verify_publishes_and_writes_success(s3):
@@ -215,6 +243,39 @@ def test_verify_fails_on_lost_row_and_publishes_nothing(s3):
     s3.objects[key] = _parquet(tbl.slice(0, 3))  # one household lost between trusted and curated
     with pytest.raises(VerifyFailed, match="row counts differ"):
         verify({"batch_id": BATCH}, None)
+    assert lake.curated_key("happy_home_household") not in s3.objects
+    assert lake.success_key(BATCH) not in s3.objects
+
+
+def test_verify_publishes_both_tables_and_reports_the_score_rows(s3):
+    run_all(s3, town(6))
+    marker = json.loads(s3.objects[lake.success_key(BATCH)])
+    assert s3.objects[lake.curated_key(RISK)] == s3.objects[lake.staging_key(BATCH, RISK)]
+    assert marker["risk_rows"] == 6 and marker["table"] == "happy_home_household"
+
+
+def _tamper_risk(s3, change):
+    """Rewrite the staged score table after Integrate, as a bug between Integrate and Verify would."""
+    schema = lake.contract("curated_happy_home_risk")
+    key = lake.staging_key(BATCH, RISK)
+    rows = table(s3, key)
+    change(rows)
+    s3.objects[key] = parquet.to_bytes(rows, schema)
+
+
+@pytest.mark.parametrize("change, message", [
+    (lambda rows: rows.pop(), "row counts differ"),
+    (lambda rows: rows[0].update(heat_risk=1.2), "outside 0-1"),
+    (lambda rows: rows[0].update(risk_score=5.0), "100 x the mean"),
+    (lambda rows: rows[0].update(risk_score=None), "100 x the mean"),
+    (lambda rows: rows[0].update(household_code="HH-999999"), "household ids differ"),
+])
+def test_verify_checks_the_score_table_and_publishes_nothing(s3, change, message):
+    _until_integrate(s3, town(4))
+    _tamper_risk(s3, change)
+    with pytest.raises(VerifyFailed, match=message):
+        verify({"batch_id": BATCH}, None)
+    assert lake.curated_key(RISK) not in s3.objects
     assert lake.curated_key("happy_home_household") not in s3.objects
     assert lake.success_key(BATCH) not in s3.objects
 

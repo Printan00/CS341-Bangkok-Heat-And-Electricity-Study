@@ -6,15 +6,16 @@ from common.survey import size_band
 
 def test_trusted_and_curated_are_allowlists_without_private_columns():
     trusted = lake.contract("trusted_happy_home")
-    curated = lake.contract("curated_happy_home_household")
-    for con in (trusted, curated):
+    curated = [lake.contract(n) for n in ("curated_happy_home_household", "curated_happy_home_risk")]
+    for con in [trusted, *curated]:
         names = [c["name"] for c in con["columns"]]
         assert len(names) == len(set(names))
         assert not set(names) & set(con["forbidden_columns"])
         assert not [n for n in names if "lat" in n.split("_") or "lon" in n.split("_") or "interviewer" in n]
     t = {c["name"]: c for c in trusted["columns"]}
-    shared = [c for c in curated["columns"] if c["name"] in t]
-    assert all(c == t[c["name"]] for c in shared)  # same type and meaning in both tables
+    for con in curated:
+        shared = [c for c in con["columns"] if c["name"] in t]
+        assert all(c == t[c["name"]] for c in shared)  # same type and meaning in both tables
 
 
 def test_every_question_maps_to_trusted_columns(contract):

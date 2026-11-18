@@ -4,12 +4,14 @@ Runs only with BHES_SAMPLE_DIR set (the survey file is never committed). Only to
 asserted here, no household ids or coordinates.
 """
 import hashlib
+import statistics
 from collections import Counter
 
 import pytest
 
 from common import lake, parquet
 from common.xlsx import read_workbook
+from integrate import scoring
 from integrate.handler import handler as integrate
 from transform.handler import handler as transform
 from validate.handler import handler as validate
@@ -70,3 +72,56 @@ def test_risk_top_20_is_the_same_under_both_weightings(run):
 def test_verify_marker(run):
     ev, trusted, curated, _ = run
     assert ev["verified"] is True and len(trusted) == len(curated) == 88
+
+
+# ---------- five-group risk score: the numbers published in reports/risk_score_formulas.md (section 4-5) ----------
+
+@pytest.fixture
+def risk(s3, run):
+    ev, *_ = run
+    return parquet.read(s3.objects[lake.curated_key("happy_home_risk")]).to_pylist()
+
+
+def test_risk_table_has_a_complete_score_for_every_household(risk):
+    assert len(risk) == 88 and all(r["risk_score"] is not None for r in risk)
+
+
+def test_risk_distribution_matches_the_spec(risk):
+    # Section 5.1 reads the median as sorted[n // 2], the upper of the two middle values when n = 88
+    # (heat 0.56 and risk_score 49.7; the average of the two middles would be 0.55 and 49.1).
+    expected = {  # group: (min, median, max, mean) from section 5.1
+        "heat_risk": (0.12, 0.56, 0.90, 0.54), "housing_risk": (0.00, 0.60, 1.00, 0.58),
+        "finance_risk": (0.00, 0.38, 1.00, 0.39), "burden_risk": (0.05, 0.50, 1.00, 0.60),
+        "coping_risk": (0.00, 0.17, 1.00, 0.31), "exposure": (0.18, 0.59, 0.87, 0.56),
+        "vulnerability": (0.06, 0.46, 0.94, 0.43), "risk_score": (17.6, 49.7, 81.0, 48.2),
+    }
+    for col, want in expected.items():
+        values = [r[col] for r in risk]
+        got = (min(values), statistics.median_high(values), max(values), statistics.fmean(values))
+        assert tuple(round(v, 2 if col != "risk_score" else 1) for v in got) == want, col
+
+
+def test_burden_risk_buckets_and_the_cap(risk):
+    values = [r["burden_risk"] for r in risk]
+    buckets = (sum(v < 0.25 for v in values), sum(0.25 <= v < 0.5 for v in values),
+               sum(0.5 <= v < 0.75 for v in values), sum(0.75 <= v < 1 for v in values), sum(v == 1 for v in values))
+    assert buckets == (22, 20, 11, 5, 30)
+
+
+def test_quadrants_at_0_5(risk):
+    assert Counter(r["risk_quadrant"] for r in risk) == \
+        {"help_first": 26, "watch": 35, "low_heat_limited": 8, "low_heat_coping": 19}
+
+
+def test_expense_above_income_count(run):
+    _, trusted, _, _ = run
+    bands = [b[0] for b in lake.contract("happy_home")["income_bands"]]
+    assert sum(scoring.expense_above_income(t, bands) == 1 for t in trusted) == 19
+
+
+def test_every_scored_answer_in_the_real_file_is_in_the_tables(run):
+    """A spelling the tables do not know would silently drop the item, so none may appear."""
+    _, trusted, _, _ = run
+    for code, table in scoring.ANSWER_SCORES.items():
+        seen = {t[scoring.COLUMN[code]] for t in trusted} - {None}
+        assert seen <= set(table), (code, seen - set(table))
