@@ -1,10 +1,10 @@
-"""Five-group household risk score (reports/risk_score_formulas.md, D8-D17) on trusted rows.
+"""Five-group household risk score (reports/risk_score_formulas.md, D8-D20) on trusted rows.
 
 Every score is 0-1 and higher means riskier. Item scores come from fixed tables (R2), never from the
 data's own spread. Answers the questionnaire marks "not sure" are not counted (None in the tables).
 
-Missing items: housing needs 4 of 5, finance 3 of 4, coping 2 of 3 (R5, D16: waiting for the team).
-Heat is not covered by R5. Rule used here (unconfirmed, same idea as D16): C2.1 and C2.5 are required
+Missing items: housing needs 4 of 5, finance 3 of 4, coping 2 of 3 (R5, D16).
+Heat is not covered by R5. Rule used here (D18, same idea as D16): C2.1 and C2.5 are required
 (the core items of T10) and at most one of the other four may be missing; D1.1 "unsure" counts 0 (T10).
 """
 import math

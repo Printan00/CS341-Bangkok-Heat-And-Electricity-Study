@@ -1,7 +1,7 @@
 {
  "_meta": {
   "table": "curated/happy_home_risk/part-0.parquet",
-  "spec": "reports/risk_score_formulas.md (D8-D17; D16 and D17 still wait for the team)",
+  "spec": "reports/risk_score_formulas.md (D8-D20, all confirmed 2026-11-19)",
   "privacy": "allowlist: only these columns are written; no coordinates, names, interviewer codes or free text"
  },
  "forbidden_columns": [
