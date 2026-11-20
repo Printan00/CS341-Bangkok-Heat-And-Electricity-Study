@@ -1,0 +1,111 @@
+{
+ "_meta": {
+  "table": "curated/happy_home_risk/part-0.parquet",
+  "spec": "reports/risk_score_formulas.md (D8-D20, all confirmed 2026-11-19)",
+  "privacy": "allowlist: only these columns are written; no coordinates, names, interviewer codes or free text"
+ },
+ "forbidden_columns": [
+  "latitude",
+  "longitude",
+  "lat",
+  "lon",
+  "grid_id",
+  "interviewer_code",
+  "ชื่อชุมชน",
+  "_พิกัดครัวเรือน (ปักหมุด)_latitude",
+  "_พิกัดครัวเรือน (ปักหมุด)_longitude",
+  "ชื่อชุมชน"
+ ],
+ "columns": [
+  {
+   "name": "household_code",
+   "type": "string",
+   "nullable": false,
+   "description": "pseudonymous household id from the export (HMAC), never the real id"
+  },
+  {
+   "name": "heat_risk",
+   "type": "float64",
+   "nullable": true,
+   "description": "group 1 heat impact 0-1: mean of C2.1, C2.5 symptoms, D1.1, D2.1, D2.2, A13 (higher = riskier)"
+  },
+  {
+   "name": "housing_risk",
+   "type": "float64",
+   "nullable": true,
+   "description": "group 2 housing 0-1: mean of the answered items of B4, B6, B7, B8, B9 (at least 4)"
+  },
+  {
+   "name": "finance_risk",
+   "type": "float64",
+   "nullable": true,
+   "description": "group 3 financial stability 0-1: mean of the answered items of A6, A11, A10, A8 above A7 (at least 3)"
+  },
+  {
+   "name": "burden_risk",
+   "type": "float64",
+   "nullable": true,
+   "description": "group 4 energy burden 0-1: geometric middle of the burden range divided by the 20% cap, at most 1"
+  },
+  {
+   "name": "coping_risk",
+   "type": "float64",
+   "nullable": true,
+   "description": "group 5 coping 0-1: mean of the answered items of A14, B12, G8 (at least 2)"
+  },
+  {
+   "name": "burden_min",
+   "type": "float64",
+   "nullable": true,
+   "description": "T07 summer bill_min / income_max"
+  },
+  {
+   "name": "burden_max",
+   "type": "float64",
+   "nullable": true,
+   "description": "T07 summer bill_max / income_min"
+  },
+  {
+   "name": "exposure",
+   "type": "float64",
+   "nullable": true,
+   "description": "axis 0-1: mean of heat_risk and housing_risk"
+  },
+  {
+   "name": "vulnerability",
+   "type": "float64",
+   "nullable": true,
+   "description": "axis 0-1: mean of finance_risk, burden_risk and coping_risk"
+  },
+  {
+   "name": "risk_score",
+   "type": "float64",
+   "nullable": true,
+   "description": "0-100: 100 x the mean of the five groups; null when any group is null"
+  },
+  {
+   "name": "risk_rank",
+   "type": "int32",
+   "nullable": true,
+   "description": "1 = riskiest; equal scores share a rank; null when risk_score is null"
+  },
+  {
+   "name": "risk_quadrant",
+   "type": "string",
+   "nullable": true,
+   "description": "help_first / watch / low_heat_limited / low_heat_coping: exposure and vulnerability each cut at 0.5"
+  },
+  {
+   "name": "batch_id",
+   "type": "string",
+   "nullable": false,
+   "description": "T12 lineage: ingest batch id"
+  },
+  {
+   "name": "source_row",
+   "type": "int32",
+   "nullable": false,
+   "description": "T12 lineage: row number in the raw sheet"
+  }
+ ]
+}
