@@ -4,6 +4,7 @@ Runs only with BHES_SAMPLE_DIR set (the survey file is never committed). Only to
 asserted here, no household ids or coordinates.
 """
 import hashlib
+import math
 import random
 import statistics
 from collections import Counter
@@ -189,3 +190,38 @@ def test_score_tracks_having_cut_back_electricity_use_e2_6(risk, run):
     assert (round(mean(map(without_burden, yes)), 1), round(mean(map(without_burden, no)), 1)) == (49.3, 42.3)
     assert permutation_p([r["risk_score"] for r in yes], [r["risk_score"] for r in no]) < 0.01  # spec p = 0.003
     assert permutation_p(list(map(without_burden, yes)), list(map(without_burden, no))) < 0.03  # spec p = 0.011
+
+
+# ---------- measured effect of the design choices D10, D12 and D17 (reports/risk_score_formulas.md) ----------
+
+def test_d7_weights_would_keep_the_same_top_18_as_equal_weights(risk):
+    equal = [sum(r[g] for g in GROUPS) for r in risk]
+    d7 = [sum(r[g] for g in GROUPS) + r["burden_risk"] for r in risk]  # burden counted twice
+    assert top_group(equal, 18) == top_group(d7, 18)
+    assert round(spearman(equal, d7), 2) == 0.97
+
+
+def test_arithmetic_middle_of_the_burden_range_would_barely_change_the_top_group(risk, run):
+    _, trusted, _, _ = run
+    by = {t["household_code"]: t for t in trusted}
+    cap = 0.20
+    arithmetic = [min((by[r["household_code"]]["burden_min"] + by[r["household_code"]]["burden_max"]) / 2 / cap, 1.0)
+                  for r in risk]
+    current = [sum(r[g] for g in GROUPS) for r in risk]
+    alternative = [sum(r[g] for g in GROUPS if g != "burden_risk") + b for r, b in zip(risk, arithmetic)]
+    assert len(top_group(current, 18) & top_group(alternative, 18)) == 17
+    assert round(spearman(current, alternative), 2) == 0.99
+
+
+def test_counting_young_children_and_pregnancy_would_flag_few_more_households(risk, run):
+    _, trusted, _, _ = run
+    four = ["a13_elderly", "a13_disabled", "a13_chronic_ill", "a13_bedridden"]
+    six = four + ["a13_child_under5", "a13_pregnant"]
+    flagged = lambda cols: sum(any(t[c] == 1 for c in cols) for t in trusted)
+    assert (flagged(four), flagged(six)) == (59, 65)
+    by = {t["household_code"]: t for t in trusted}
+    shift = [(any(by[r["household_code"]][c] == 1 for c in six) - any(by[r["household_code"]][c] == 1 for c in four)) / 6
+             for r in risk]  # A13 is one of the six items of heat_risk, and every household answered all six
+    current = [sum(r[g] for g in GROUPS) for r in risk]
+    alternative = [c + d for c, d in zip(current, shift)]
+    assert len(top_group(current, 18) & top_group(alternative, 18)) == 17
