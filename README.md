@@ -35,7 +35,7 @@
 |---|---|---|---|
 | **Happy Home / ThaiCI** (Nature-based Solutions Survey) | 2026 (สัมภาษณ์ ก.ค. 2026) | 88 ครัวเรือน จาก 2 ชุมชนริมคลองเปรมประชากร เขตหลักสี่ | **ข้อมูลหลักของ Q1–Q3** มีลักษณะบ้าน ผลกระทบความร้อน ค่าไฟ เครื่องใช้ไฟฟ้า |
 | **SoVI V8** (Social Vulnerability Survey) | 2023 | 500 ครัวเรือน จาก 17 ชุมชนในกรุงเทพฯ และปริมณฑล | บริบทระดับกลุ่มของ Q3 เท่านั้น (ไม่มีค่าไฟและตัวแปรความร้อน) |
-| Landsat / Earth Engine (ทางเลือก) | – | ระดับชุมชน | ตัวแปรเสริมของ Happy Home (`scripts/gee_lst.py` ยังไม่ได้รันจริง) |
+| Landsat / Earth Engine | – | ระดับชุมชนและรายครัวเรือน | LST เสริม Happy Home: ดึงในเครื่องด้วย `scripts/gee_lst.py` แล้วเข้า pipeline เป็นแหล่ง `gee_lst` → `curated/community_dim/` และ `gee_lst_household` → `curated/household_lst/` ([gee_lst_pipeline.md](reports/gee_lst_pipeline.md)) |
 
 > **ข้อมูลสำรวจดิบไม่อยู่ใน repo** (repo เป็น public และข้อมูลไม่ผ่าน k-anonymity) เก็บเฉพาะในโฟลเดอร์ `data/` ในเครื่อง ซึ่งอยู่ใน `.gitignore` ขอไฟล์ได้จากผู้สอนวิชา
 > ทั้งสองชุด **ไม่ join รายครัวเรือน** (ต่างปี ต่างพื้นที่ ต่างชั้นรายได้) เทียบได้เฉพาะระดับกลุ่ม ดู [reports/integration_feasibility.md](reports/integration_feasibility.md)
@@ -158,7 +158,11 @@ terraform -chdir=infra/terraform apply     # ตอบ yes เมื่อตร
 .venv/bin/pip install -r scripts/requirements.txt          # openpyxl, boto3
 .venv/bin/python scripts/ingest.py --bucket $(terraform -chdir=infra/terraform output -raw lake_bucket)
 ```
-สคริปต์พิมพ์ `batch_id` ของแต่ละไฟล์ (เช่น `happy_home-26cba344f87c`, `sovi-7fb4858da401`) **จดไว้ใช้ต่อ** ไฟล์ขึ้น `incoming/` แล้ว copy เข้า `raw/<source>/<batch_id>/` พร้อม metadata และ `_manifest.json` จากนั้นลบจาก `incoming/`
+LST (ไม่บังคับ): รัน `scripts/gee_lst.py` ก่อน ingest (ต้อง `pip install -r scripts/requirements-gee.txt` และ `earthengine authenticate`) ได้ `data/gee_lst_community.csv` และ `data/gee_lst_household.csv` แล้ว ingest จะนำขึ้นเป็นแหล่ง `gee_lst` และ `gee_lst_household` ถ้าไม่มีไฟล์ ingest จะข้ามพร้อมข้อความ
+```bash
+.venv/bin/python scripts/gee_lst.py --project <gcp-project>    # ในเครื่องเท่านั้น พิกัดไม่ออกจากเครื่อง
+```
+สคริปต์พิมพ์ `batch_id` ของแต่ละไฟล์ (เช่น `happy_home-26cba344f87c`, `sovi-7fb4858da401`, `gee_lst-…`) **จดไว้ใช้ต่อ** ไฟล์ขึ้น `incoming/` แล้ว copy เข้า `raw/<source>/<batch_id>/` พร้อม metadata และ `_manifest.json` จากนั้นลบจาก `incoming/`
 `batch_id = <source>-<sha256 12 ตัวแรก>` ไฟล์เนื้อหาเดิมได้ `batch_id` เดิม รันซ้ำจะขึ้น SKIP ไม่เขียนทับ
 
 ### 4.7 รัน pipeline → Glue → Athena
@@ -170,7 +174,9 @@ EX=$(aws stepfunctions start-execution --state-machine-arn $SM \
       --input "{\"batch_id\":\"$BATCH\"}" --query executionArn --output text)
 aws stepfunctions describe-execution --execution-arn $EX --query status --output text   # รอจน SUCCEEDED
 ```
-สถานะที่คาดหวัง: Happy Home → `SUCCEEDED` (ผ่าน 88 ถูกแยก 0), SoVI → `FAILED` ที่ `ValidationFailed` (ยังไม่มีกฎของ SoVI ตั้งใจให้หยุด) ดูเหตุผลที่ `quarantine/<source>/<batch_id>/dq_report.json`
+ถ้ามี batch `gee_lst` / `gee_lst_household` ให้รันก่อน Happy Home (ใช้คำสั่งเดียวกัน `BATCH=gee_lst-…`) ได้ `curated/community_dim/` และ `curated/household_lst/` แล้ว Happy Home จะใส่ `lst_*` และ `lst_hh_*` ใน `happy_home_risk` ถ้า Happy Home publish ไปก่อนแล้ว ให้รันซ้ำด้วย `"force":true`
+
+สถานะที่คาดหวัง: Happy Home → `SUCCEEDED` (ผ่าน 88 ถูกแยก 0), `gee_lst` → `SUCCEEDED` (2 ชุมชน), SoVI → `FAILED` ที่ `ValidationFailed` (ยังไม่มีกฎของ SoVI ตั้งใจให้หยุด) ดูเหตุผลที่ `quarantine/<source>/<batch_id>/dq_report.json`
 
 จากนั้น crawl ตารางแล้ว query:
 ```bash
@@ -224,8 +230,8 @@ bucket state (`bhes-tfstate-<ACCOUNT_ID>`) ลบด้วยมือเมื�
 | ขั้น | โค้ด | เขียนที่ |
 |---|---|---|
 | Validate | `lambdas/validate/` | `quarantine/<source>/<batch_id>/` : `dq_report.json`, `violations.csv`, `rows.jsonl` (แถวที่ถูกแยก), `manifest.json` |
-| Transform | `lambdas/transform/` | `trusted/happy_home/batch_id=<batch_id>/part-0.parquet` (ไม่มีพิกัด ชื่อ หรือรหัสผู้สัมภาษณ์) |
-| Integrate | `lambdas/integrate/` | `curated/_pipeline/staging/<batch_id>/happy_home_household.parquet` (รวม risk score T13) และ `happy_home_risk.parquet` (คะแนน 5 หมวด, [สูตร](reports/risk_score_formulas.md)) |
+| Transform | `lambdas/transform/` | `trusted/happy_home/batch_id=<batch_id>/part-0.parquet` (ไม่มีพิกัด ชื่อ หรือรหัสผู้สัมภาษณ์); `gee_lst`: `trusted/gee_lst/batch_id=<batch_id>/part-0.parquet` (1 แถว/ชุมชน) |
+| Integrate | `lambdas/integrate/` | `curated/_pipeline/staging/<batch_id>/happy_home_household.parquet` (รวม risk score T13) และ `happy_home_risk.parquet` (คะแนน 5 หมวด, [สูตร](reports/risk_score_formulas.md) + LST ของชุมชนจาก `curated/community_dim/`); `gee_lst`: `community_dim.parquet` |
 | Verify | `lambdas/verify/` | ผ่าน: `curated/happy_home_household/part-0.parquet` + `curated/happy_home_risk/part-0.parquet` + `curated/_pipeline/success/<batch_id>/_SUCCESS.json`; ไม่ผ่าน: workflow ล้มพร้อมเหตุผล ไม่ publish |
 | CheckBatch | `lambdas/check_batch/` | อ่านอย่างเดียว: เจอ `_SUCCESS.json` ของ batch นั้นแล้วข้ามไป SkipDuplicate |
 
@@ -291,7 +297,7 @@ lambdas/
 scripts/
   ingest.py                        นำไฟล์จาก data/ เข้า S3 raw/ พร้อม metadata (รันซ้ำไม่เกิดข้อมูลซ้ำ)
   profile_codebook.py              ตรวจ codebook รันซ้ำได้
-  gee_lst.py                       LST ระดับชุมชนจาก Landsat ผ่าน Earth Engine (ทางเลือก ต้อง authenticate ยังไม่ได้รันจริง)
+  gee_lst.py                       LST จาก Landsat ผ่าน Earth Engine → data/gee_lst_community.csv และ gee_lst_household.csv (รันในเครื่อง ต้อง authenticate)
 dashboard/
   index.html                       หน้า dashboard ไฟล์เดียว (ผลลัพธ์ของ build.py)
   template.html, build.py          เทมเพลตและสคริปต์สร้างหน้าจาก analytics/results/*.csv
@@ -306,6 +312,7 @@ reports/
   data_dictionary.md               ผลตรวจ codebook (#14)
   validation_rules.md              กฎ Validate/Transform และเกณฑ์ D1–D7 (#19, #20, #22)
   integration_feasibility.md       ผลตรวจการเชื่อม SoVI / Happy Home / GEE (#23)
+  gee_lst_pipeline.md              pipeline ของ LST: กฎ G01–G10, community_dim, การ join และ D21–D24
   q1_q3_findings.md                ผลวิเคราะห์ Q1–Q3 (#24)
   crosswalk_sovi_happyhome.csv     ตารางจับคู่ตัวแปรระหว่างสองแบบสำรวจ
   *_variables.csv, profile_summary.json   รายการตัวแปร (เฉพาะค่ารวม ไม่มีข้อมูลรายแถว)
@@ -335,7 +342,7 @@ data/                              ข้อมูลสำรวจดิบ (�
 |---|---|
 | ทำแล้ว | ข้อมูลสำรวจ (#13), ตรวจ codebook (#14), Architecture diagram (#15), Terraform S3/IAM (#16) และ Step Functions/Lambda/Glue/Athena (#17), Ingestion (#18), Validate + Quarantine (#19), Transform → Trusted (#20), Idempotency (#21), Verify + เทสต์ (#22), ตรวจการเชื่อม SoVI/Happy Home/GEE (#23), Glue + Athena ตอบ Q1–Q3 (#24), แก้ Proposal (#26) |
 | กำลังทำ | README วิธีรัน + บันทึกการใช้ AI (#27), สไลด์และ Demo Checkpoint (#28) |
-| ทางเลือก ยังไม่เริ่ม | QuickSight (#33: มีค่าใช้จ่ายรายเดือน รอตัดสินใจ), รัน `scripts/gee_lst.py` จริง |
+| ทางเลือก ยังไม่เริ่ม | QuickSight (#33: มีค่าใช้จ่ายรายเดือน รอตัดสินใจ), รัน batch `gee_lst` บน AWS จริง (โค้ดและเทสต์ทำแล้ว) |
 | ทำแล้ว (PR) | Dashboard Q1–Q3 แบบ HTML ไฟล์เดียวจากผล Athena (`dashboard/`) |
 
 - ภาพ Architecture เป็นดีไซน์เป้าหมายของ Checkpoint ถ้าตอนสร้างจริงต่างจากภาพ ให้แก้ภาพตาม
