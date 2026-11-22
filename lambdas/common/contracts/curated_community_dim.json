@@ -1,0 +1,79 @@
+{
+ "_meta": {
+  "table": "curated/community_dim/part-0.parquet",
+  "spec": "reports/gee_lst_pipeline.md",
+  "privacy": "allowlist: one row per community, no coordinates or household ids"
+ },
+ "forbidden_columns": [
+  "latitude",
+  "longitude",
+  "lat",
+  "lon",
+  "centre_lat",
+  "centre_lon",
+  "geometry",
+  "household_code"
+ ],
+ "columns": [
+  {
+   "name": "community_key",
+   "type": "string",
+   "nullable": false,
+   "description": "community key, same values as community_key in trusted_happy_home (join key)"
+  },
+  {
+   "name": "lst_mean_c",
+   "type": "float64",
+   "nullable": false,
+   "description": "mean Landsat 8/9 land surface temperature (deg C) of the clear pixels in the buffer, over the period"
+  },
+  {
+   "name": "lst_score",
+   "type": "float64",
+   "nullable": false,
+   "description": "lst_mean_c on the fixed 30-45 deg C range -> 0-1 (<=30 -> 0, >=45 -> 1), higher = hotter; not in risk_score yet"
+  },
+  {
+   "name": "n_scenes",
+   "type": "int32",
+   "nullable": false,
+   "description": "Landsat scenes covering the buffer in the period (not the number of cloud-free scenes)"
+  },
+  {
+   "name": "period_start",
+   "type": "string",
+   "nullable": false,
+   "description": "first day of the image period, YYYY-MM-DD"
+  },
+  {
+   "name": "period_end",
+   "type": "string",
+   "nullable": false,
+   "description": "end of the image period, YYYY-MM-DD (Earth Engine filterDate: exclusive)"
+  },
+  {
+   "name": "buffer_m",
+   "type": "float64",
+   "nullable": false,
+   "description": "radius (m) around the community centre that was averaged"
+  },
+  {
+   "name": "lst_source",
+   "type": "string",
+   "nullable": false,
+   "description": "image product and band, e.g. landsat8/9_c02_l2_ST_B10"
+  },
+  {
+   "name": "batch_id",
+   "type": "string",
+   "nullable": false,
+   "description": "batch the row came from (lineage)"
+  },
+  {
+   "name": "source_row",
+   "type": "int32",
+   "nullable": false,
+   "description": "row number in the raw CSV, header = 1 (lineage)"
+  }
+ ]
+}

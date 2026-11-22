@@ -6,6 +6,11 @@ data's own spread. Answers the questionnaire marks "not sure" are not counted (N
 Missing items: housing needs 4 of 5, finance 3 of 4, coping 2 of 3 (R5, D16).
 Heat is not covered by R5. Rule used here (D18, same idea as D16): C2.1 and C2.5 are required
 (the core items of T10) and at most one of the other four may be missing; D1.1 "unsure" counts 0 (T10).
+
+LST (D21/D25, reports/gee_lst_pipeline.md): land surface temperature is joined as separate columns, on the
+fixed 30-45 deg C range -> 0-1. It is NOT in risk_score.
+  community level (community_dim, on community_key): lst_mean_c, lst_score, lst_batch_id
+  household level (household_lst, on household_code): lst_hh_c, lst_hh_score, lst_hh_batch_id
 """
 import math
 
@@ -131,15 +136,40 @@ def ranks(scores):
     return [first[s] if s is not None else None for s in scores]
 
 
-def risk_rows(trusted, income_bands, schema):
-    """One record per trusted row with exactly the columns of contracts/curated_happy_home_risk.json."""
+def lst_score(lst_c, score_range):
+    """D21: LST (deg C) on a fixed range -> 0-1; at or below the low end 0, at or above the high end 1 (R2)."""
+    if lst_c is None:
+        return None
+    lo, hi = score_range
+    return round(min(max((lst_c - lo) / (hi - lo), 0.0), 1.0), DIGITS)
+
+
+COMMUNITY_LST = ("lst_mean_c", "lst_score", "lst_batch_id")
+HOUSEHOLD_LST = ("lst_hh_c", "lst_hh_score", "lst_hh_batch_id")
+
+
+def lst_fields(source_row, columns=COMMUNITY_LST):
+    """source_row: the published community_dim / household_lst row for this household, or None (no LST)."""
+    if source_row is None:
+        return dict.fromkeys(columns)
+    return dict(zip(columns, (source_row["lst_mean_c"], source_row["lst_score"], source_row["batch_id"])))
+
+
+def risk_rows(trusted, income_bands, schema, lst=None, lst_hh=None):
+    """One record per trusted row with exactly the columns of contracts/curated_happy_home_risk.json.
+
+    lst: community_key -> published community_dim row; lst_hh: household_code -> published household_lst row
+    (empty or None: those LST columns are null).
+    """
     names = [c["name"] for c in schema["columns"]]
+    lst, lst_hh = lst or {}, lst_hh or {}
     out = []
     for t in trusted:
         groups = {"heat_risk": heat_risk(t), "housing_risk": housing_risk(t),
                   "finance_risk": finance_risk(t, income_bands), "burden_risk": burden_risk(t),
                   "coping_risk": coping_risk(t)}
-        row = {**t, **groups, **combine(groups)}
+        row = {**t, **groups, **combine(groups), **lst_fields(lst.get(t.get("community_key"))),
+               **lst_fields(lst_hh.get(t.get("household_code")), HOUSEHOLD_LST)}
         out.append({n: row.get(n) for n in names})
     for row, r in zip(out, ranks([r["risk_score"] for r in out])):
         row["risk_rank"] = r

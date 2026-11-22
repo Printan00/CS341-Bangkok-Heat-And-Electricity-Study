@@ -1,0 +1,25 @@
+{
+ "_meta": {
+  "source": "community-level Landsat 8/9 LST from scripts/gee_lst.py (run locally: household coordinates never leave the machine)",
+  "spec": "reports/gee_lst_pipeline.md (rules G01-G09)",
+  "communities": "must be community keys of happy_home.json community_map (the join key with Happy Home)"
+ },
+ "source": "gee_lst",
+ "raw_extension": ".csv",
+ "required_columns": ["community", "lst_mean_c", "n_scenes", "period", "buffer_m", "source"],
+ "optional_columns": ["n_households"],
+ "forbidden_columns": [
+  "latitude",
+  "longitude",
+  "lat",
+  "lon",
+  "centre_lat",
+  "centre_lon",
+  "geometry",
+  "household_code",
+  "_พิกัดครัวเรือน (ปักหมุด)_latitude",
+  "_พิกัดครัวเรือน (ปักหมุด)_longitude"
+ ],
+ "lst_plausible_c": [15.0, 70.0],
+ "lst_score_c": [30.0, 45.0]
+}

@@ -96,6 +96,42 @@
    "description": "help_first / watch / low_heat_limited / low_heat_coping: exposure and vulnerability each cut at 0.5"
   },
   {
+   "name": "lst_mean_c",
+   "type": "float64",
+   "nullable": true,
+   "description": "community LST (deg C) from curated/community_dim for the household's community_key; null when the community is unknown or has no LST"
+  },
+  {
+   "name": "lst_score",
+   "type": "float64",
+   "nullable": true,
+   "description": "lst_mean_c on the fixed 30-45 deg C range -> 0-1; a separate indicator, NOT part of risk_score (D21)"
+  },
+  {
+   "name": "lst_batch_id",
+   "type": "string",
+   "nullable": true,
+   "description": "gee_lst batch the LST came from (lineage); null when no LST was joined"
+  },
+  {
+   "name": "lst_hh_c",
+   "type": "float64",
+   "nullable": true,
+   "description": "household LST (deg C) from curated/household_lst (50 m around the household point); null when the household has no usable coordinates or no clear pixel"
+  },
+  {
+   "name": "lst_hh_score",
+   "type": "float64",
+   "nullable": true,
+   "description": "lst_hh_c on the fixed 30-45 deg C range -> 0-1; a separate indicator, NOT part of risk_score (D21)"
+  },
+  {
+   "name": "lst_hh_batch_id",
+   "type": "string",
+   "nullable": true,
+   "description": "gee_lst_household batch the LST came from (lineage); null when no LST was joined"
+  },
+  {
    "name": "batch_id",
    "type": "string",
    "nullable": false,
