@@ -1,0 +1,39 @@
+{
+  "name": "bangkok-heat-dashboard",
+  "version": "0.1.0",
+  "private": true,
+  "engines": {
+    "node": ">=20.9.0"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "dev:q3-internal": "Q3_INTERNAL_VIEW=1 next dev --hostname 127.0.0.1 --port 3005"
+  },
+  "dependencies": {
+    "@aws-crypto/sha256-js": "5.2.0",
+    "@aws-sdk/credential-provider-node": "3.972.99",
+    "@fontsource/ibm-plex-sans-thai": "5.3.0",
+    "@fontsource/poppins": "5.3.0",
+    "@smithy/protocol-http": "5.6.2",
+    "@smithy/signature-v4": "5.7.5",
+    "lucide-react": "1.73.0",
+    "next": "16.4.6",
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "4.3.3",
+    "@types/node": "^24",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.4.6",
+    "postcss": "8.5.34",
+    "tailwindcss": "4.3.3",
+    "typescript": "^5.9"
+  }
+}
