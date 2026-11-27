@@ -312,7 +312,7 @@ reports/
   data_dictionary.md               ผลตรวจ codebook (#14)
   validation_rules.md              กฎ Validate/Transform และเกณฑ์ D1–D7 (#19, #20, #22)
   integration_feasibility.md       ผลตรวจการเชื่อม SoVI / Happy Home / GEE (#23)
-  gee_lst_pipeline.md              pipeline ของ LST: กฎ G01–G10, community_dim, การ join และ D21–D24
+  gee_lst_pipeline.md              pipeline ของ LST: กฎ G01–G10, ตาราง, การ join, ผลรันและการทดสอบ, D21–D28
   q1_q3_findings.md                ผลวิเคราะห์ Q1–Q3 (#24)
   crosswalk_sovi_happyhome.csv     ตารางจับคู่ตัวแปรระหว่างสองแบบสำรวจ
   *_variables.csv, profile_summary.json   รายการตัวแปร (เฉพาะค่ารวม ไม่มีข้อมูลรายแถว)
