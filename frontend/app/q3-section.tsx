@@ -1,26 +1,26 @@
-import { ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { Suspense } from "react";
 import { getQ3Data } from "../lib/q3-data";
 import { Q3Table } from "./q3-table";
+import { DashboardStatus } from "./dashboard-ui";
 
 async function Q3Results() {
   const data = await getQ3Data();
   if (data.status !== "ready") {
     return (
-      <p className="panel p-3 text-sm text-muted">
+      <DashboardStatus>
         {data.status === "unconfigured" ? "ยังไม่ได้ตั้งค่า API สำหรับข้อมูลจริง Q3" : "ดึงข้อมูลจริง Q3 ไม่สำเร็จ กรุณาลองใหม่ในภายหลัง"}
-      </p>
+      </DashboardStatus>
     );
   }
 
-  if (!data.rows.length) return <p className="panel p-3 text-sm text-muted">ยังไม่มีครัวเรือนที่จัดกลุ่มได้</p>;
+  if (!data.rows.length) return <DashboardStatus>ยังไม่มีครัวเรือนที่จัดกลุ่มได้</DashboardStatus>;
 
   const priority = data.rows.find(({ group }) => group === "help_first");
   return (
     <>
       {priority?.households != null && (
-        <p className="mb-2 text-sm"><strong className="text-heat">{priority.households} ครัวเรือนอยู่ในกลุ่มช่วยก่อน</strong> เพราะเผชิญความร้อนและมีความเปราะบางสูงตามเกณฑ์ของโครงการ</p>
+        <p className="mb-3 rounded-panel bg-olive-soft p-3 text-sm"><strong className="text-olive">{priority.households} ครัวเรือนอยู่ในกลุ่มช่วยก่อน</strong> เพราะเผชิญความร้อนและมีความเปราะบางสูงตามเกณฑ์ของโครงการ</p>
       )}
       <Q3Table rows={data.rows} />
     </>
@@ -29,16 +29,12 @@ async function Q3Results() {
 
 export function Q3Section() {
   return (
-    <section className="mt-4" id="priority" aria-labelledby="priority-title">
-      <div className="mb-2 flex items-center gap-2">
-        <span className="question-icon bg-olive-soft text-olive"><ShieldCheck size={16} aria-hidden="true" /> Q3</span>
-        <h2 id="priority-title" className="section-title">กลุ่มไหนควรได้รับความช่วยเหลือก่อน?</h2>
-      </div>
-      <p className="mb-2 text-xs text-muted">ข้อมูลรวมจาก Happy Home · คะแนนรุ่น D27/D28 · รวมทุกชุมชน</p>
+    <section id="priority" aria-labelledby="priority-title">
+      <h2 id="priority-title" className="mb-2 section-title">สรุปคะแนนเฉลี่ยตามกลุ่ม</h2>
       {process.env.NODE_ENV === "development" && process.env.Q3_INTERNAL_VIEW === "1" && (
         <Link className="mb-2 inline-block text-sm font-medium text-heat underline" href="/internal/q3" prefetch={false}>เปิดตารางรายครัวเรือนสำหรับตรวจข้อมูล</Link>
       )}
-      <Suspense fallback={<p className="panel p-3 text-sm text-muted" role="status">กำลังโหลดผลสรุปจาก Athena</p>}>
+      <Suspense fallback={<DashboardStatus>กำลังโหลดผลสรุปจาก Athena</DashboardStatus>}>
         <Q3Results />
       </Suspense>
     </section>

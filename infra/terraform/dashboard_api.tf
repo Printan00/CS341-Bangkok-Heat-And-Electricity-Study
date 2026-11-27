@@ -29,7 +29,8 @@ data "aws_iam_policy_document" "dashboard_query" {
     resources = [
       "arn:aws:glue:${var.region}:${local.account_id}:catalog",
       "arn:aws:glue:${var.region}:${local.account_id}:database/${aws_glue_catalog_database.bhes.name}",
-      "arn:aws:glue:${var.region}:${local.account_id}:table/${aws_glue_catalog_database.bhes.name}/happy_home_risk"
+      "arn:aws:glue:${var.region}:${local.account_id}:table/${aws_glue_catalog_database.bhes.name}/happy_home_risk",
+      "arn:aws:glue:${var.region}:${local.account_id}:table/${aws_glue_catalog_database.bhes.name}/happy_home_household"
     ]
   }
 
@@ -39,8 +40,11 @@ data "aws_iam_policy_document" "dashboard_query" {
   }
 
   statement {
-    actions   = ["s3:GetObject"]
-    resources = ["${aws_s3_bucket.lake.arn}/curated/happy_home_risk/*"]
+    actions = ["s3:GetObject"]
+    resources = [
+      "${aws_s3_bucket.lake.arn}/curated/happy_home_risk/*",
+      "${aws_s3_bucket.lake.arn}/curated/happy_home_household/*"
+    ]
   }
 
   statement {
@@ -147,4 +151,27 @@ resource "aws_lambda_permission" "dashboard_q3_households" {
 
 output "dashboard_q3_households_invoke_arn" {
   value = "${aws_apigatewayv2_api.dashboard.execution_arn}/$default/GET/dashboard/q3/households"
+}
+
+resource "aws_apigatewayv2_route" "dashboard_q1" {
+  api_id             = aws_apigatewayv2_api.dashboard.id
+  route_key          = "GET /dashboard/q1"
+  target             = "integrations/${aws_apigatewayv2_integration.dashboard_q3.id}"
+  authorization_type = "AWS_IAM"
+}
+
+resource "aws_lambda_permission" "dashboard_q1" {
+  statement_id  = "AllowGatewayQ1"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.dashboard_query.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_apigatewayv2_api.dashboard.execution_arn}/$default/GET/dashboard/q1"
+}
+
+output "dashboard_q1_api_url" {
+  value = "${aws_apigatewayv2_api.dashboard.api_endpoint}/dashboard/q1"
+}
+
+output "dashboard_q1_invoke_arn" {
+  value = "${aws_apigatewayv2_api.dashboard.execution_arn}/$default/GET/dashboard/q1"
 }

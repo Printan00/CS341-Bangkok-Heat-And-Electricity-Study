@@ -1,4 +1,4 @@
-"""Serve the published Happy Home Q3 group summary through API Gateway."""
+"""Serve published Happy Home analysis through API Gateway."""
 
 import json
 import logging
@@ -7,6 +7,7 @@ import time
 from pathlib import Path
 
 import boto3
+import q1
 from botocore.config import Config
 from botocore.exceptions import BotoCoreError, ClientError
 
@@ -18,18 +19,23 @@ COLUMNS = ("priority_group", "suppressed", "households", *METRICS)
 LOGGER = logging.getLogger(__name__)
 
 
-def fetch_rows(query_id):
-    # This fixed query can return at most three groups plus a header.
-    result = ATHENA.get_query_results(QueryExecutionId=query_id, MaxResults=10)
+def read_rows(query_id, columns, max_results):
+    result = ATHENA.get_query_results(QueryExecutionId=query_id, MaxResults=max_results)
     rows = result["ResultSet"]["Rows"]
     header = tuple(cell.get("VarCharValue") for cell in rows[0]["Data"])
-    if header != COLUMNS or result.get("NextToken"):
+    if header != columns or result.get("NextToken"):
         raise ValueError("Unexpected Athena result schema")
 
+    return [
+        dict(zip(columns, (cell.get("VarCharValue") for cell in row["Data"]), strict=True))
+        for row in rows[1:]
+    ]
+
+
+def fetch_summary(query_id):
     summary = []
     seen = set()
-    for row in rows[1:]:
-        values = dict(zip(COLUMNS, (cell.get("VarCharValue") for cell in row["Data"]), strict=True))
+    for values in read_rows(query_id, COLUMNS, 10):
         group = values["priority_group"]
         if group not in GROUPS or group in seen or values["suppressed"] not in {"true", "false"}:
             raise ValueError("Unexpected priority group")
@@ -57,14 +63,16 @@ def response(status, body):
 
 def handler(event, context):
     try:
-        if event.get("routeKey") == "GET /dashboard/q3/households":
+        route = event.get("routeKey")
+        if route == "GET /dashboard/q3/households":
             from households import read_households
 
             return response(200, read_households())
 
+        q1_request = route == "GET /dashboard/q1"
         deadline = time.monotonic() + min(16, context.get_remaining_time_in_millis() / 1000 - 4)
         query_id = ATHENA.start_query_execution(
-            QueryString=SQL,
+            QueryString=q1.SQL if q1_request else SQL,
             WorkGroup=os.environ["ATHENA_WORKGROUP"],
             QueryExecutionContext={"Database": os.environ["ATHENA_DATABASE"]},
             ResultReuseConfiguration={"ResultReuseByAgeConfiguration": {"Enabled": True, "MaxAgeInMinutes": 5}},
@@ -73,14 +81,16 @@ def handler(event, context):
         while time.monotonic() < deadline:
             status = ATHENA.get_query_execution(QueryExecutionId=query_id)["QueryExecution"]["Status"]["State"]
             if status == "SUCCEEDED":
-                return response(200, {"scoreVersion": "D27/D28", "threshold": 0.5, "rows": fetch_rows(query_id)})
+                if q1_request:
+                    return response(200, q1.payload(read_rows(query_id, q1.COLUMNS, 100)))
+                return response(200, {"scoreVersion": "D27/D28", "threshold": 0.5, "rows": fetch_summary(query_id)})
             if status in {"FAILED", "CANCELLED"}:
-                LOGGER.warning("Q3 Athena query %s ended with %s", query_id, status)
-                return response(502, {"error": "q3_query_failed"})
+                LOGGER.warning("Dashboard Athena query %s ended with %s", query_id, status)
+                return response(502, {"error": "dashboard_query_failed"})
             time.sleep(0.35)
 
         ATHENA.stop_query_execution(QueryExecutionId=query_id)
-        return response(504, {"error": "q3_query_timeout"})
+        return response(504, {"error": "dashboard_query_timeout"})
     except (BotoCoreError, ClientError, ValueError, KeyError, IndexError) as exc:
-        LOGGER.error("Q3 request failed: %s", type(exc).__name__)
-        return response(502, {"error": "q3_unavailable"})
+        LOGGER.error("Dashboard request failed: %s", type(exc).__name__)
+        return response(502, {"error": "dashboard_unavailable"})
