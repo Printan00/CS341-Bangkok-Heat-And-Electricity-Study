@@ -1,6 +1,7 @@
-import { Info, ShieldCheck, Thermometer, Users, Zap, type LucideIcon } from "lucide-react";
+import { Info, Thermometer, Users, Zap, type LucideIcon } from "lucide-react";
 import { ElectricityChart, HousingChart } from "./charts";
 import { CommunityFilter, Methodology, SectionNavigation } from "./controls";
+import { Q3Section } from "./q3-section";
 import { getDashboardData, parseCommunity, type DashboardData } from "../lib/dashboard-data";
 
 type SearchParams = Promise<{ community?: string | string[] }>;
@@ -9,10 +10,7 @@ const statTones = {
   sample: "bg-[#f5ecd9] text-[#8a5a23]",
   heat: "bg-heat-soft text-heat",
   energy: "bg-energy-soft text-energy",
-  priority: "bg-olive-soft text-olive",
 };
-
-const priorityTones = { urgent: "bg-heat", important: "bg-[#ac7949]", watch: "bg-[#8a854f]" };
 
 function Summary({ data }: { data: DashboardData }) {
   const stats: {
@@ -25,11 +23,10 @@ function Summary({ data }: { data: DashboardData }) {
     { value: data.sampleSize, label: "ครัวเรือนในกลุ่มตัวอย่าง", tone: "sample", icon: Users },
     { value: data.heatPercent === null ? "—" : `${data.heatPercent}%`, label: "ได้รับผลกระทบสูงจากความร้อน", tone: "heat", icon: Thermometer },
     { value: data.burdenPercent === null ? "—" : `${data.burdenPercent}%`, label: "มีภาระค่าไฟสูง", detail: "ค่าไฟ ≥ 10% ของรายได้", tone: "energy", icon: Zap },
-    { value: data.priority[0].count, label: "ครัวเรือนในกลุ่มช่วยเหลือเร่งด่วน", tone: "priority", icon: ShieldCheck },
   ];
 
   return (
-    <dl className="grid grid-cols-2 gap-2 @min-[36rem]:grid-cols-4 @min-[36rem]:gap-2.5" aria-label="ตัวเลขสำคัญ">
+    <dl className="grid grid-cols-2 gap-2 @min-[36rem]:grid-cols-3 @min-[36rem]:gap-2.5" aria-label="ตัวเลขสำคัญ">
       {stats.map(({ label, value, detail, tone, icon: Icon }) => (
         <div className="panel stat" key={label}>
           <dt className="text-[13px] leading-[1.35] font-medium text-muted">
@@ -42,33 +39,6 @@ function Summary({ data }: { data: DashboardData }) {
         </div>
       ))}
     </dl>
-  );
-}
-
-function PriorityTable({ rows }: { rows: DashboardData["priority"] }) {
-  return (
-    <section className="mt-4" id="priority" aria-labelledby="priority-title">
-      <div className="mb-2 flex items-center gap-2">
-        <span className="question-icon bg-olive-soft text-olive"><ShieldCheck size={16} aria-hidden="true" /> Q3</span>
-        <h2 id="priority-title" className="section-title">กลุ่มไหนควรได้รับความช่วยเหลือก่อน?</h2>
-      </div>
-      <div className="panel overflow-hidden">
-        <table className="priority-table w-full border-collapse text-left text-xs compact:text-sm" aria-labelledby="priority-title">
-          <thead className="bg-sand text-xs font-semibold text-[#554c3f] compact:text-[13px]">
-            <tr><th scope="col" className="w-[32%] compact:w-1/4">ระดับความช่วยเหลือ</th><th scope="col" className="w-[19%] text-center compact:w-[17%]">จำนวนครัวเรือน</th><th scope="col">ลักษณะร่วม</th></tr>
-          </thead>
-          <tbody>
-            {rows.map(({ label, detail, tone, count }) => (
-              <tr key={tone}>
-                <th scope="row" className="font-semibold"><span className={`mr-[5px] inline-block size-[7px] rounded-full align-[1px] compact:mr-2 compact:size-[9px] ${priorityTones[tone]}`} aria-hidden="true" />{label}</th>
-                <td className="priority-count text-center font-bold tabular-nums">{count}</td>
-                <td className="text-muted">{detail}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </section>
   );
 }
 
@@ -88,7 +58,7 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
           <p className="mx-2 mb-1 hidden text-[13px] font-semibold text-muted desktop:block">งานวิจัย</p>
           <SectionNavigation />
         </div>
-        <span className="col-start-2 row-start-1 flex items-center gap-2 rounded-[9px] border border-[#ece7dc] bg-sand px-2 py-[5px] text-[13px] whitespace-nowrap text-muted desktop:mt-auto desktop:px-[11px] desktop:py-[9px]"><Info size={17} aria-hidden="true" /> ข้อมูลจำลอง</span>
+        <span className="col-start-2 row-start-1 flex items-center gap-2 rounded-[9px] border border-[#ece7dc] bg-sand px-2 py-[5px] text-[13px] whitespace-nowrap text-muted desktop:mt-auto desktop:px-[11px] desktop:py-[9px]"><Info size={17} aria-hidden="true" /> Q1–Q2 ข้อมูลจำลอง</span>
       </aside>
 
       <main className="min-w-0" id="overview" tabIndex={-1}>
@@ -115,8 +85,8 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
               <ElectricityChart rows={data.income} />
             </div>
           </section>
-          <PriorityTable rows={data.priority} />
-          <footer className="mt-3 flex flex-wrap justify-between gap-x-4 gap-y-1 border-t border-line pt-2 pb-3 text-xs text-muted"><span>Bangkok Heat and Electricity Study</span><span>ข้อมูลจำลองสำหรับสาธิตแดชบอร์ด</span></footer>
+          <Q3Section />
+          <footer className="mt-3 flex flex-wrap justify-between gap-x-4 gap-y-1 border-t border-line pt-2 pb-3 text-xs text-muted"><span>Bangkok Heat and Electricity Study</span><span>Q1–Q2 ใช้ข้อมูลจำลอง</span></footer>
         </div>
       </main>
     </div>

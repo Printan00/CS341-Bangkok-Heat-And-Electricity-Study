@@ -79,14 +79,14 @@ export function Methodology() {
           <h2 id="guide-title" className="text-[25px] font-bold">วิธีอ่านข้อมูล</h2>
           <form method="dialog"><button className="toolbar-button size-10 p-0" aria-label="ปิดวิธีอ่านข้อมูล"><X size={21} aria-hidden="true" /></button></form>
         </div>
-        <p className="text-muted">แดชบอร์ดนี้ใช้ข้อมูลจำลองเพื่อแสดงตัวอย่างการนำเสนอผลวิจัย</p>
+        <p className="text-muted">Q1 และ Q2 ใช้ข้อมูลจำลอง ส่วน Q3 ใช้ข้อมูลสรุปจาก Athena เมื่อเชื่อมต่อ API</p>
         <dl>
           <dt className="mt-[13px] font-semibold">ผลกระทบสูงจากความร้อน</dt>
           <dd className="text-muted">สัดส่วนครัวเรือนที่อยู่ในกลุ่มผลกระทบสูง คำนวณแยกตามลักษณะบ้านแต่ละกลุ่ม</dd>
           <dt className="mt-[13px] font-semibold">ภาระค่าไฟสูง</dt>
           <dd className="text-muted">ค่าไฟหน้าร้อนคิดเป็นอย่างน้อย 10% ของรายได้ต่อเดือนตามเกณฑ์ตัวอย่าง</dd>
           <dt className="mt-[13px] font-semibold">ลำดับความช่วยเหลือ</dt>
-          <dd className="text-muted">ตัวอย่างการจัดกลุ่มจากรายได้ ภาระค่าไฟ และผลกระทบจากความร้อน ตัวเลขแสดงเฉพาะระดับกลุ่ม</dd>
+          <dd className="text-muted">กลุ่มช่วยก่อนมีคะแนนการเผชิญความร้อนและความเปราะบางอย่างน้อย 0.5 ทั้งสองแกน ตัวเลขแสดงเฉพาะระดับกลุ่ม</dd>
         </dl>
       </dialog>
     </>

@@ -65,6 +65,4 @@
     @apply absolute top-1/2 -translate-y-1/2 text-[13px] leading-none font-bold tabular-nums;
     left: calc(var(--bar-width) + 7px);
   }
-  .priority-table th, .priority-table td { @apply p-2 compact:px-3 compact:py-1.5; }
-  .priority-table tbody tr { @apply border-t border-line; }
 }

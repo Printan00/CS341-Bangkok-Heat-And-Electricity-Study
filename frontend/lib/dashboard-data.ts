@@ -14,23 +14,16 @@ const incomeLabels = [
 
 const housingLabels = ["ผนังไม้", "ผนังวัสดุอื่น", "ระบายอากาศไม่ดี", "ระบายอากาศดี"] as const;
 
-const priorityGroups = [
-  { label: "ลำดับที่ 1 · เร่งด่วน", detail: "รายได้ต่ำและมีภาระค่าไฟสูง", tone: "urgent" },
-  { label: "ลำดับที่ 2 · สำคัญ", detail: "มีภาระค่าไฟสูงหรือได้รับผลกระทบจากความร้อนสูง", tone: "important" },
-  { label: "ลำดับที่ 3 · ติดตาม", detail: "ติดตามภาระค่าไฟและผลกระทบจากความร้อนในการสำรวจรอบถัดไป", tone: "watch" },
-] as const;
-
 type Count = readonly [affected: number, total: number];
 
 type CommunitySample = {
   housing: readonly [Count, Count, Count, Count];
   income: readonly [Count, Count, Count];
-  priority: readonly [number, number, number];
 };
 
 const samples: Record<Exclude<Community, "all">, CommunitySample> = {
-  a: { housing: [[14, 25], [9, 35], [17, 31], [6, 29]], income: [[18, 26], [6, 20], [2, 14]], priority: [16, 18, 26] },
-  b: { housing: [[12, 25], [7, 35], [13, 30], [6, 30]], income: [[14, 29], [6, 12], [2, 19]], priority: [9, 18, 33] },
+  a: { housing: [[14, 25], [9, 35], [17, 31], [6, 29]], income: [[18, 26], [6, 20], [2, 14]] },
+  b: { housing: [[12, 25], [7, 35], [13, 30], [6, 30]], income: [[14, 29], [6, 12], [2, 19]] },
 };
 
 export function parseCommunity(value: string | string[] | undefined): Community {
@@ -56,13 +49,12 @@ export type Comparison = {
 export type DashboardData = {
   housing: Comparison[];
   income: Comparison[];
-  priority: (typeof priorityGroups[number] & { count: number })[];
   sampleSize: number;
   heatPercent: number | null;
   burdenPercent: number | null;
 };
 
-// The dashboard consumes this aggregate shape. Replace this adapter when the API is ready.
+// Temporary comparison data for Q1 and Q2.
 export async function getDashboardData(community: Community): Promise<DashboardData> {
   const housing = housingLabels.map((label, index): Comparison => ({
     label,
@@ -74,18 +66,11 @@ export async function getDashboardData(community: Community): Promise<DashboardD
     count: combineCounts(samples.a.income[index], samples.b.income[index], community),
     tone: "energy",
   }));
-  const priority = priorityGroups.map((group, index) => ({
-    ...group,
-    count: community === "all"
-      ? samples.a.priority[index] + samples.b.priority[index]
-      : samples[community].priority[index],
-  }));
-
   const [heatHouseholds, sampleSize] = housing.slice(0, 2).reduce<Count>(
     ([affected, total], { count }) => [affected + count[0], total + count[1]],
     [0, 0],
   );
   const highBurden = income.reduce((total, { count }) => total + count[0], 0);
 
-  return { housing, income, priority, sampleSize, heatPercent: percent(heatHouseholds, sampleSize), burdenPercent: percent(highBurden, sampleSize) };
+  return { housing, income, sampleSize, heatPercent: percent(heatHouseholds, sampleSize), burdenPercent: percent(highBurden, sampleSize) };
 }
