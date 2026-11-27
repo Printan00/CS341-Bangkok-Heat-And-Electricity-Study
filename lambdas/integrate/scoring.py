@@ -6,6 +6,14 @@ data's own spread. Answers the questionnaire marks "not sure" are not counted (N
 Missing items: housing needs 4 of 5, finance 3 of 4, coping 2 of 3 (R5, D16).
 Heat is not covered by R5. Rule used here (D18, same idea as D16): C2.1 and C2.5 are required
 (the core items of T10) and at most one of the other four may be missing; D1.1 "unsure" counts 0 (T10).
+
+LST (D25-D28, reports/gee_lst_pipeline.md): land surface temperature on the fixed 30-45 deg C range -> 0-1.
+  community level (community_dim, on community_key): lst_mean_c, lst_score, lst_batch_id (context only)
+  household level (household_lst, on household_code): lst_hh_c, lst_hh_score, lst_hh_batch_id
+D27: lst_hh_score is the sixth part of risk_score (equal weights 1/6, replacing D17's 1/5) and sits on the
+exposure axis (the physical hazard next to the reported heat impact and the house).
+D28: a household without lst_hh_score (no usable point) keeps the mean of the five survey groups; LST alone
+never makes risk_score null.
 """
 import math
 
@@ -112,12 +120,18 @@ def quadrant(exposure, vulnerability):
             (False, True): "low_heat_limited", (False, False): "low_heat_coping"}[(hot, limited)]
 
 
-def combine(groups):
-    """groups: the five group scores -> exposure, vulnerability, risk_score (0-100) and quadrant."""
-    exposure = mean([groups["heat_risk"], groups["housing_risk"]], 2)
+def combine(groups, lst=None):
+    """groups: the five survey group scores, lst: lst_hh_score or None -> exposure, vulnerability,
+    risk_score (0-100) and quadrant. The five survey groups are required (R6); LST is added when present (D27/D28)."""
+    survey_exposure = [groups["heat_risk"], groups["housing_risk"]]
+    exposure = None if None in survey_exposure else mean(survey_exposure + [lst], 2)
     vulnerability = mean([groups["finance_risk"], groups["burden_risk"], groups["coping_risk"]], 3)
     values = [groups[g] for g in GROUPS]
-    score = None if any(v is None for v in values) else round(100 * sum(values) / len(values), DIGITS)  # R6
+    if any(v is None for v in values):
+        score = None  # R6
+    else:
+        parts = values + ([lst] if lst is not None else [])
+        score = round(100 * sum(parts) / len(parts), DIGITS)
     return {"exposure": exposure, "vulnerability": vulnerability, "risk_score": score,
             "risk_quadrant": quadrant(exposure, vulnerability)}
 
@@ -131,15 +145,41 @@ def ranks(scores):
     return [first[s] if s is not None else None for s in scores]
 
 
-def risk_rows(trusted, income_bands, schema):
-    """One record per trusted row with exactly the columns of contracts/curated_happy_home_risk.json."""
+def lst_score(lst_c, score_range):
+    """D21: LST (deg C) on a fixed range -> 0-1; at or below the low end 0, at or above the high end 1 (R2)."""
+    if lst_c is None:
+        return None
+    lo, hi = score_range
+    return round(min(max((lst_c - lo) / (hi - lo), 0.0), 1.0), DIGITS)
+
+
+COMMUNITY_LST = ("lst_mean_c", "lst_score", "lst_batch_id")
+HOUSEHOLD_LST = ("lst_hh_c", "lst_hh_score", "lst_hh_batch_id")
+
+
+def lst_fields(source_row, columns=COMMUNITY_LST):
+    """source_row: the published community_dim / household_lst row for this household, or None (no LST)."""
+    if source_row is None:
+        return dict.fromkeys(columns)
+    return dict(zip(columns, (source_row["lst_mean_c"], source_row["lst_score"], source_row["batch_id"])))
+
+
+def risk_rows(trusted, income_bands, schema, lst=None, lst_hh=None):
+    """One record per trusted row with exactly the columns of contracts/curated_happy_home_risk.json.
+
+    lst: community_key -> published community_dim row; lst_hh: household_code -> published household_lst row
+    (empty or None: those LST columns are null).
+    """
     names = [c["name"] for c in schema["columns"]]
+    lst, lst_hh = lst or {}, lst_hh or {}
     out = []
     for t in trusted:
         groups = {"heat_risk": heat_risk(t), "housing_risk": housing_risk(t),
                   "finance_risk": finance_risk(t, income_bands), "burden_risk": burden_risk(t),
                   "coping_risk": coping_risk(t)}
-        row = {**t, **groups, **combine(groups)}
+        household = lst_fields(lst_hh.get(t.get("household_code")), HOUSEHOLD_LST)
+        row = {**t, **groups, **combine(groups, household["lst_hh_score"]),
+               **lst_fields(lst.get(t.get("community_key"))), **household}
         out.append({n: row.get(n) for n in names})
     for row, r in zip(out, ranks([r["risk_score"] for r in out])):
         row["risk_rank"] = r

@@ -77,7 +77,7 @@
 **การตัดสินใจ: ใช้ GEE เป็นตัวแปรเสริมระดับชุมชนเท่านั้น (ไม่ตัด)** เก็บกล่อง Earth Engine ในภาพไว้ตามเดิม ขอบเขตและข้อจำกัด
 - ใช้ค่า LST เฉลี่ยของ **ชุมชน** (2 ชุมชน) เป็นบริบทประกอบ Q1 ไม่ใช้ประมาณความสัมพันธ์รายครัวเรือน (n ชุมชน = 2 ไม่พอสำหรับสถิติ)
 - พิกัดครัวเรือนอ่านในเครื่องเท่านั้น ไม่เข้า S3 และไม่เขียนลงไฟล์ผลลัพธ์
-- ผลลัพธ์เข้า Curated เป็น `community_dim` (`lst_mean_c`, `n_scenes`, `period`)
+- ผลลัพธ์เข้า Curated เป็น `community_dim` (`lst_mean_c`, `n_scenes`, `period`) ทำแล้ว 22 พ.ย. 2026 ดู [gee_lst_pipeline.md](gee_lst_pipeline.md)
 - สคริปต์: `scripts/gee_lst.py` (ติดตั้งจาก `scripts/requirements-gee.txt`) **เขียนแล้วแต่ยังไม่ได้รันกับ Earth Engine** เพราะต้อง `earthengine authenticate` และมี GCP project ที่ลงทะเบียนไว้
 
 ต้องทำก่อนเชื่อผลลัพธ์

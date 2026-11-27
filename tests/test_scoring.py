@@ -146,6 +146,23 @@ def test_total_is_null_when_any_group_is_null():
     assert out["exposure"] is None and out["vulnerability"] == near((0.4 + 0.7 + 0.2) / 3)
 
 
+def test_lst_is_the_sixth_part_and_joins_the_exposure_axis():
+    """D27: household LST is an equal sixth part of risk_score and the third part of exposure."""
+    groups = {"heat_risk": 0.5, "housing_risk": 0.6, "finance_risk": 0.4, "burden_risk": 0.7, "coping_risk": 0.2}
+    out = scoring.combine(groups, lst=0.9)
+    assert out["risk_score"] == near(100 * (2.4 + 0.9) / 6)
+    assert out["exposure"] == near((0.5 + 0.6 + 0.9) / 3)
+    assert out["vulnerability"] == near((0.4 + 0.7 + 0.2) / 3)
+
+
+def test_missing_lst_keeps_the_five_group_score_but_a_missing_survey_group_still_nulls_it():
+    """D28: LST alone never makes the total null; R6 still applies to the five survey groups."""
+    groups = {"heat_risk": 0.5, "housing_risk": 0.6, "finance_risk": 0.4, "burden_risk": 0.7, "coping_risk": 0.2}
+    assert scoring.combine(groups, lst=None)["risk_score"] == near(48.0)
+    out = scoring.combine({**groups, "heat_risk": None}, lst=0.9)
+    assert out["risk_score"] is None and out["exposure"] is None
+
+
 @pytest.mark.parametrize("exposure, vulnerability, quadrant", [
     (0.8, 0.8, "help_first"), (0.8, 0.2, "watch"), (0.2, 0.8, "low_heat_limited"), (0.2, 0.2, "low_heat_coping"),
 ])

@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""Upload the survey xlsx files from local data/ into the S3 Raw zone.
+"""Upload the source files from local data/ into the S3 Raw zone.
+
+Sources: happy_home and sovi (survey .xlsx, required), gee_lst and gee_lst_household
+(data/gee_lst_community.csv, data/gee_lst_household.csv from scripts/gee_lst.py, optional: skipped
+with a note when they have not been made yet).
 
 Each file goes to incoming/ first, then is copied to raw/<source>/<batch_id>/ with
 metadata (batch_id, source, ingested_at, sha256), plus a _manifest.json ingest log.
@@ -22,7 +26,9 @@ from botocore.exceptions import ClientError
 
 from profile_codebook import HH_FILE, SOVI_FILE
 
-SOURCES = {"happy_home": Path(HH_FILE).name, "sovi": Path(SOVI_FILE).name}
+SOURCES = {"happy_home": Path(HH_FILE).name, "sovi": Path(SOVI_FILE).name, "gee_lst": "gee_lst_community.csv",
+           "gee_lst_household": "gee_lst_household.csv"}
+OPTIONAL = {"gee_lst", "gee_lst_household"}
 
 
 def exists(s3, bucket, key):
@@ -69,6 +75,9 @@ def main():
     files = {}
     for source, name in SOURCES.items():
         found = sorted(args.data_dir.rglob(name))
+        if not found and source in OPTIONAL:
+            print(f"skip {source}: no {name} under {args.data_dir}/ (run scripts/gee_lst.py first)")
+            continue
         if not found:
             sys.exit(f"missing {name} under {args.data_dir}/")
         files[source] = found[0]
