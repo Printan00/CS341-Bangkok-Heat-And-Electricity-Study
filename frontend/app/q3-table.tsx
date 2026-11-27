@@ -2,13 +2,8 @@
 
 import { ArrowDown, ArrowDownUp, ArrowUp } from "lucide-react";
 import { useState } from "react";
-import type { RiskGroup, RiskMetric, RiskRow } from "../lib/q3-data";
-
-const groupInfo: Record<RiskGroup, { order: number; label: string }> = {
-  help_first: { order: 1, label: "ช่วยก่อน" },
-  watch: { order: 2, label: "เฝ้าระวัง" },
-  lower_exposure: { order: 3, label: "เผชิญความร้อนต่ำกว่าเกณฑ์" },
-};
+import type { RiskMetric, RiskRow } from "../lib/q3-data";
+import { groupInfo } from "../lib/q3-groups";
 
 type SortKey = "priority" | "group" | "households" | RiskMetric;
 type Direction = "asc" | "desc";

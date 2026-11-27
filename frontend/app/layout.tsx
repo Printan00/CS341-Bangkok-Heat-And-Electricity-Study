@@ -8,6 +8,7 @@ import "@fontsource/ibm-plex-sans-thai/thai-500.css";
 import "@fontsource/ibm-plex-sans-thai/thai-600.css";
 import "@fontsource/ibm-plex-sans-thai/thai-700.css";
 import "./globals.css";
+import { DashboardShell } from "./dashboard-shell";
 
 export const metadata: Metadata = {
   title: "ความร้อนและค่าไฟในกรุงเทพฯ | Bangkok Heat",
@@ -17,7 +18,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="th">
-      <body>{children}</body>
+      <body><DashboardShell>{children}</DashboardShell></body>
     </html>
   );
 }

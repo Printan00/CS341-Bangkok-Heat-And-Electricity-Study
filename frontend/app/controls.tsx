@@ -1,41 +1,47 @@
 "use client";
 
-import { useRef, useSyncExternalStore, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useRef, useTransition } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import Link from "next/link";
 import { ChevronDown, House, Info, ShieldCheck, Thermometer, X, Zap } from "lucide-react";
 import { communities, type Community } from "../lib/dashboard-data";
 
 const sections = [
-  { id: "overview", label: "ภาพรวม", icon: House },
-  { id: "heat", label: "ความร้อนในบ้าน", icon: Thermometer },
-  { id: "electricity", label: "ภาระค่าไฟ", icon: Zap },
-  { id: "priority", label: "ลำดับความช่วยเหลือ", icon: ShieldCheck },
+  { href: "/", label: "ภาพรวม", icon: House },
+  { href: "/q1", label: "ความร้อนในบ้าน", icon: Thermometer },
+  { href: "/q2", label: "ภาระค่าไฟ", icon: Zap },
+  { href: "/q3", label: "ลำดับความช่วยเหลือ", icon: ShieldCheck },
 ] as const;
 
-function subscribeToHash(callback: () => void) {
-  window.addEventListener("hashchange", callback);
-  return () => window.removeEventListener("hashchange", callback);
-}
-
-function currentHash() {
-  return window.location.hash.slice(1) || "overview";
-}
-
 export function SectionNavigation() {
-  const active = useSyncExternalStore(subscribeToHash, currentHash, () => "overview");
+  const pathname = usePathname();
+  const active = pathname === "/internal/q3" ? "/q3" : pathname;
 
   return (
     <nav aria-label="ส่วนต่าง ๆ ของงานวิจัย">
-      <ul className="flex flex-wrap gap-x-[5px] gap-y-[3px] desktop:grid desktop:gap-[3px]">
-        {sections.map(({ id, label, icon: Icon }) => (
-          <li key={id}>
-            <a className="nav-link" href={`#${id}`} aria-current={active === id ? "location" : undefined}>
-              <Icon className="size-4 shrink-0 desktop:size-[19px]" aria-hidden="true" />
-              {label}
-            </a>
+      <ul className="grid grid-cols-2 gap-1 compact:grid-cols-4 desktop:grid-cols-1">
+        {sections.map(({ href, label, icon: Icon }) => (
+          <li key={href}>
+            <Link className="nav-link" href={href} prefetch={false} aria-current={active === href ? (pathname === href ? "page" : "location") : undefined}>
+              <Icon className="size-4 shrink-0" aria-hidden="true" />{label}
+            </Link>
           </li>
         ))}
       </ul>
+    </nav>
+  );
+}
+
+export function DashboardBreadcrumb() {
+  const pathname = usePathname();
+  const section = sections.find(({ href }) => href === pathname);
+  return (
+    <nav aria-label="ตำแหน่งปัจจุบัน" className="min-w-0 text-xs text-muted compact:text-[13px]">
+      {pathname === "/" ? <span>แดชบอร์ด</span> : <Link href="/" className="hover:text-heat">แดชบอร์ด</Link>}
+      <span aria-hidden="true" className="px-1.5">/</span>
+      <strong className="font-semibold text-ink" aria-current="page">
+        {pathname === "/internal/q3" ? "ตารางรายครัวเรือน Q3" : section?.label ?? "ไม่พบหน้า"}
+      </strong>
     </nav>
   );
 }
@@ -70,7 +76,7 @@ export function Methodology() {
 
   return (
     <>
-      <button type="button" className="toolbar-button" onClick={() => dialog.current?.showModal()}>
+      <button type="button" className="toolbar-button shrink-0 whitespace-nowrap text-xs compact:text-[13px]" onClick={() => dialog.current?.showModal()}>
         <Info size={17} aria-hidden="true" />
         วิธีอ่านข้อมูล
       </button>
@@ -79,7 +85,7 @@ export function Methodology() {
           <h2 id="guide-title" className="text-[25px] font-bold">วิธีอ่านข้อมูล</h2>
           <form method="dialog"><button className="toolbar-button size-10 p-0" aria-label="ปิดวิธีอ่านข้อมูล"><X size={21} aria-hidden="true" /></button></form>
         </div>
-        <p className="text-muted">Q1 และ Q2 ใช้ข้อมูลจำลอง ส่วน Q3 ใช้ข้อมูลสรุปจาก Athena เมื่อเชื่อมต่อ API</p>
+        <p className="text-muted">Q1 และ Q3 ใช้ข้อมูลสรุปจาก Athena เมื่อเชื่อมต่อ API ส่วน Q2 ใช้ข้อมูลจำลอง</p>
         <dl>
           <dt className="mt-[13px] font-semibold">ผลกระทบสูงจากความร้อน</dt>
           <dd className="text-muted">สัดส่วนครัวเรือนที่อยู่ในกลุ่มผลกระทบสูง คำนวณแยกตามลักษณะบ้านแต่ละกลุ่ม</dd>

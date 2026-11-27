@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { fetchQ3 } from "../../../lib/q3-data";
 import { HouseholdTable, type HouseholdData } from "./table";
+import { DashboardHeading, DashboardStatus } from "../../dashboard-ui";
 
 export default async function InternalQ3Page() {
   if (process.env.NODE_ENV !== "development" || process.env.Q3_INTERNAL_VIEW !== "1" || process.env.VERCEL) {
@@ -28,10 +29,10 @@ export default async function InternalQ3Page() {
   }
 
   return (
-    <main className="mx-auto max-w-[1500px] px-4 py-5">
-      <Link href="/#priority" className="text-sm text-heat underline">กลับไปหน้าสรุป Q3</Link>
-      <h1 className="mt-3 text-xl font-bold compact:text-2xl">Q3 · ตารางรายครัวเรือน</h1>
-      <p className="mt-1 mb-3 text-sm text-muted">มุมมองตรวจข้อมูลภายใน · เริ่มจากลำดับความเสี่ยงสูงสุด · กดหัวคอลัมน์เพื่อเรียงข้อมูล</p>
+    <>
+      <DashboardHeading question="Q3" title="ตารางรายครัวเรือน"
+        description="มุมมองตรวจข้อมูลภายใน · เริ่มจากลำดับความเสี่ยงสูงสุด · กดหัวคอลัมน์เพื่อเรียงข้อมูล" />
+      <Link href="/q3" className="mb-3 inline-block text-sm font-medium text-heat underline">กลับไปหน้าสรุป Q3</Link>
       <details className="panel mb-3 px-3 py-2 text-sm">
         <summary className="cursor-pointer font-semibold">วิธีอ่านคะแนนและลำดับ</summary>
         <dl className="mt-2 space-y-2 text-muted">
@@ -41,7 +42,7 @@ export default async function InternalQ3Page() {
           <div><dt className="font-semibold text-ink">LST และที่มาของข้อมูล</dt><dd>lst_mean_c คืออุณหภูมิพื้นผิวระดับชุมชน และ lst_hh_c คือค่าระดับครัวเรือน หน่วย °C ช่องขีดหมายถึงไม่มีค่า คอลัมน์ batch_id และ source_row ใช้ตรวจที่มาของแถว</dd></div>
         </dl>
       </details>
-      {data ? <HouseholdTable {...data} /> : <p className="panel p-3 text-sm">ดึงข้อมูล S3 ไม่สำเร็จ กรุณาตรวจสิทธิ์ AWS ของโปรไฟล์ที่กำลังใช้</p>}
-    </main>
+      {data ? <HouseholdTable {...data} /> : <DashboardStatus>ดึงข้อมูล S3 ไม่สำเร็จ กรุณาตรวจสิทธิ์ AWS ของโปรไฟล์ที่กำลังใช้</DashboardStatus>}
+    </>
   );
 }
