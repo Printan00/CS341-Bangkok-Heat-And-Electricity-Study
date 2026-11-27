@@ -8,6 +8,9 @@ Docs/*
 # Survey data: never commit (public repo)
 data/
 
+# Local slide assets
+/analytics/slide_images/
+
 # Terraform: never commit state, secrets, or provider cache
 .terraform/
 *.tfstate

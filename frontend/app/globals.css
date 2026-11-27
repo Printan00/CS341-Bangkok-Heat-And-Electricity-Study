@@ -1,0 +1,70 @@
+@import "tailwindcss";
+
+@theme {
+  --color-canvas: #f8f7f3;
+  --color-ink: #24211e;
+  --color-muted: #615b53;
+  --color-line: #e7e2d9;
+  --color-heat: #a94521;
+  --color-heat-soft: #f9e9df;
+  --color-energy: #17675f;
+  --color-energy-soft: #e6f1ee;
+  --color-olive: #626138;
+  --color-olive-soft: #eeeee0;
+  --color-sand: #f1eee7;
+  --radius-panel: 12px;
+  --breakpoint-compact: 40.625rem;
+  --breakpoint-desktop: 60rem;
+  --breakpoint-wide: 70.6875rem;
+  --font-sans: "Poppins", "IBM Plex Sans Thai", system-ui, sans-serif;
+}
+
+@layer base {
+  html { @apply scroll-smooth scheme-light motion-reduce:scroll-auto; }
+  body { @apply bg-canvas font-sans text-[15px] leading-[1.55] text-ink antialiased; }
+  [id] { @apply scroll-mt-[22px]; }
+  button, select { @apply cursor-pointer; }
+  :focus-visible { @apply outline-2 outline-offset-4 outline-energy; }
+}
+
+@layer components {
+  .panel { @apply rounded-panel border border-line bg-white; }
+  .toolbar-button {
+    @apply inline-flex min-h-9 items-center justify-center gap-[7px] rounded-lg border border-line bg-white px-[11px] py-[5px] font-semibold hover:bg-sand;
+  }
+  .nav-link {
+    @apply flex min-h-[37px] items-center gap-[5px] rounded-[9px] px-2 py-[5px] text-[13px] text-muted
+      transition-colors hover:bg-canvas hover:text-ink motion-reduce:transition-none
+      desktop:min-h-9 desktop:gap-2 desktop:px-2 desktop:py-1.5;
+  }
+  .nav-link[aria-current] { @apply bg-heat-soft font-semibold text-heat; }
+  .section-title { @apply text-[clamp(19px,2.1cqi,25px)] leading-tight font-bold text-pretty; }
+  .stat {
+    @apply relative flex min-h-[82px] min-w-0 flex-col gap-1 px-2.5 py-2.5 compact:px-3;
+  }
+  .stat-icon {
+    @apply absolute top-2 right-2 grid size-7 place-items-center rounded-lg compact:right-3;
+  }
+  .question-icon { @apply inline-flex shrink-0 items-center justify-center gap-1 rounded-md px-[7px] py-1 text-[11px] font-bold tracking-wide; }
+  .takeaway { @apply mt-auto flex items-start gap-1.5 rounded-lg px-2 py-1.5 text-[13px] leading-[1.42]; }
+  .takeaway svg { @apply shrink-0; }
+
+  .chart-row, .chart-axis {
+    @apply grid grid-cols-[clamp(92px,22cqi,100px)_minmax(0,1fr)_32px] items-center gap-1.5;
+  }
+  .bar-track {
+    @apply relative block h-full border-x border-[#eeeae2] border-l-[#d5cec4];
+    background-image: linear-gradient(to right, #eeeae2 1px, transparent 1px);
+    background-size: 25% 100%;
+  }
+  .bar {
+    @apply absolute top-1/2 block h-3 -translate-y-1/2 rounded-r-[3px] transition-[width] duration-200 motion-reduce:transition-none;
+    width: var(--bar-width);
+  }
+  .bar-value {
+    @apply absolute top-1/2 -translate-y-1/2 text-[13px] leading-none font-bold tabular-nums;
+    left: calc(var(--bar-width) + 7px);
+  }
+  .priority-table th, .priority-table td { @apply p-2 compact:px-3 compact:py-1.5; }
+  .priority-table tbody tr { @apply border-t border-line; }
+}
