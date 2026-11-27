@@ -1,12 +1,15 @@
 """Verify step (#22): a finished run is not proof the data is right, so check before publishing.
 
-Checks the staged curated table against trusted/, Validate's manifest and the raw file:
-  1. row counts: raw = passed + quarantined; manifest passed = trusted = curated
-  2. the same household ids, each once, in manifest, trusted and curated
+Checks the staged curated tables (happy_home_household and the five-group happy_home_risk) against
+trusted/, Validate's manifest and the raw file:
+  1. row counts: raw = passed + quarantined; manifest passed = trusted = curated = risk
+  2. the same household ids, each once, in manifest, trusted, curated and risk
   3. schema: column names and types exactly as in the schema contracts (nothing extra, e.g. coordinates)
   4. required fields (nullable=false in the contract) have no nulls
   5. totals: usable_q1..q3, has_aircon and burden_class counts agree between trusted and curated
-When everything passes: publish staging -> curated/<table>/part-0.parquet, then write
+  6. risk table: every group score and both axes in 0-1, risk_score in 0-100 and equal to 100 x the mean
+     of the five groups (null exactly when a group is null)
+When everything passes: publish both staging tables -> curated/<table>/part-0.parquet, then write
 curated/_pipeline/success/<batch_id>/_SUCCESS.json (for CheckBatch). Otherwise raise VerifyFailed,
 which fails the Step Functions execution with the reasons, and nothing is published.
 """
@@ -17,6 +20,9 @@ from common import lake, parquet
 from common.xlsx import read_workbook
 
 TABLE = "happy_home_household"
+RISK_TABLE = "happy_home_risk"
+GROUPS = ["heat_risk", "housing_risk", "finance_risk", "burden_risk", "coping_risk"]
+UNIT_SCORES = GROUPS + ["exposure", "vulnerability"]  # kept apart from integrate/scoring.py on purpose
 TOTALS = ["usable_q1", "usable_q2", "usable_q3", "has_aircon", "burden_class"]
 
 
@@ -57,9 +63,28 @@ def id_problems(ids, label):
     return ["%s has %d repeated household ids" % (label, len(dup))] if dup else []
 
 
-def checks(raw_rows, manifest, trusted_tbl, curated_tbl, trusted_contract, curated_contract):
+def risk_problems(rows):
+    """The five-group table: scores inside their ranges and the total recomputed from the groups."""
+    outside = sum(1 for r in rows for c in UNIT_SCORES if r.get(c) is not None and not 0 <= r[c] <= 1)
+    outside += sum(1 for r in rows if r.get("risk_score") is not None and not 0 <= r["risk_score"] <= 100)
+    wrong = 0
+    for r in rows:
+        groups = [r.get(g) for g in GROUPS]
+        expected = None if any(v is None for v in groups) else 100 * sum(groups) / len(groups)
+        got = r.get("risk_score")
+        if (expected is None) != (got is None) or (expected is not None and abs(expected - got) > 1e-4):
+            wrong += 1
+    p = []
+    if outside:
+        p.append("risk has %d scores outside 0-1 (risk_score outside 0-100)" % outside)
+    if wrong:
+        p.append("risk has %d rows where risk_score is not 100 x the mean of the five groups" % wrong)
+    return p
+
+
+def checks(raw_rows, manifest, trusted_tbl, curated_tbl, risk_tbl, trusted_contract, curated_contract, risk_contract):
     """-> (problems, summary). Pure function so tests can call it without S3."""
-    trusted, curated = trusted_tbl.to_pylist(), curated_tbl.to_pylist()
+    trusted, curated, risk = trusted_tbl.to_pylist(), curated_tbl.to_pylist(), risk_tbl.to_pylist()
     passed = manifest["passed"]
     p = []
     if manifest.get("status") != "passed":
@@ -68,21 +93,26 @@ def checks(raw_rows, manifest, trusted_tbl, curated_tbl, trusted_contract, curat
         p.append("raw has %d rows, Validate counted %d" % (raw_rows, manifest["rows_total"]))
     if raw_rows != len(passed) + len(manifest["quarantined"]):
         p.append("raw %d != passed %d + quarantined %d" % (raw_rows, len(passed), len(manifest["quarantined"])))
-    if not (len(passed) == len(trusted) == len(curated)):
-        p.append("row counts differ: passed %d, trusted %d, curated %d" % (len(passed), len(trusted), len(curated)))
+    if not (len(passed) == len(trusted) == len(curated) == len(risk)):
+        p.append("row counts differ: passed %d, trusted %d, curated %d, risk %d"
+                 % (len(passed), len(trusted), len(curated), len(risk)))
     if not trusted:
         p.append("no rows to publish")
     ids = {"manifest": [r["household_code"] for r in passed],
            "trusted": [r.get("household_code") for r in trusted],
-           "curated": [r.get("household_code") for r in curated]}
+           "curated": [r.get("household_code") for r in curated],
+           "risk": [r.get("household_code") for r in risk]}
     for label, v in ids.items():
         p += id_problems(v, label)
-    if not (set(ids["manifest"]) == set(ids["trusted"]) == set(ids["curated"])):
-        p.append("household ids differ between manifest, trusted and curated")
+    if not (set(ids["manifest"]) == set(ids["trusted"]) == set(ids["curated"]) == set(ids["risk"])):
+        p.append("household ids differ between manifest, trusted, curated and risk")
     p += schema_problems(trusted_tbl, trusted_contract, "trusted")
     p += schema_problems(curated_tbl, curated_contract, "curated")
+    p += schema_problems(risk_tbl, risk_contract, "risk")
     p += null_problems(trusted, trusted_contract, "trusted")
     p += null_problems(curated, curated_contract, "curated")
+    p += null_problems(risk, risk_contract, "risk")
+    p += risk_problems(risk)
     totals = {}
     for col in TOTALS:
         t = Counter(r.get(col) for r in trusted)
@@ -91,7 +121,7 @@ def checks(raw_rows, manifest, trusted_tbl, curated_tbl, trusted_contract, curat
             p.append("totals of %s differ between trusted and curated" % col)
         totals[col] = {str(k): v for k, v in sorted(t.items(), key=lambda kv: str(kv[0]))}
     summary = {"raw_rows": raw_rows, "passed": len(passed), "quarantined": len(manifest["quarantined"]),
-               "trusted_rows": len(trusted), "curated_rows": len(curated), "totals": totals}
+               "trusted_rows": len(trusted), "curated_rows": len(curated), "risk_rows": len(risk), "totals": totals}
     return p, summary
 
 
@@ -102,16 +132,21 @@ def run(batch_id):
     rules = lake.contract("happy_home")
     raw_rows = len(read_workbook(lake.get_bytes(manifest["raw_key"]))[rules["data_sheet"]].rows)
     staging = lake.staging_key(batch_id, TABLE)
-    curated_bytes = lake.get_bytes(staging)
+    risk_staging = lake.staging_key(batch_id, RISK_TABLE)
+    curated_bytes, risk_bytes = lake.get_bytes(staging), lake.get_bytes(risk_staging)
     problems, summary = checks(
         raw_rows, manifest,
         parquet.read(lake.get_bytes(lake.trusted_key(batch_id))), parquet.read(curated_bytes),
-        lake.contract("trusted_happy_home"), lake.contract("curated_happy_home_household"))
+        parquet.read(risk_bytes),
+        lake.contract("trusted_happy_home"), lake.contract("curated_happy_home_household"),
+        lake.contract("curated_happy_home_risk"))
     if problems:
         raise VerifyFailed("; ".join(problems))
-    published = lake.curated_key(TABLE)
+    published = lake.curated_key(TABLE)  # both tables pass every check before either is published
     lake.put_bytes(published, curated_bytes)
-    marker = {"batch_id": batch_id, "status": "SUCCEEDED", "table": TABLE, "curated_key": published,
+    lake.put_bytes(lake.curated_key(RISK_TABLE), risk_bytes)
+    marker = {"batch_id": batch_id, "status": "SUCCEEDED", "table": TABLE, "tables": [TABLE, RISK_TABLE],
+              "curated_key": published, "risk_key": lake.curated_key(RISK_TABLE),
               "source_file_sha256": manifest["source_file_sha256"],
               "verified_at": datetime.now(timezone.utc).isoformat(timespec="seconds"), **summary}
     lake.put_json(lake.success_key(batch_id), marker)
