@@ -91,14 +91,32 @@ def test_each_household_gets_its_own_lst_and_missing_ones_get_null(s3):
     assert marker["lst_hh_batch_ids"] == [GHH] and marker["lst_hh_households"] == 3
 
 
-def test_household_lst_is_not_part_of_risk_score(s3):
+def test_household_lst_is_the_sixth_part_of_risk_score(s3):
+    """D27: risk_score = 100 x mean(five survey groups + lst_hh_score); D28: no LST -> mean of the five."""
+    run_ghh(s3, hh_rows({1: 45.0, 2: 30.0, 3: 37.5}))  # scores 1.0, 0.0, 0.5; household 4 has no LST
+    run_hh(s3, town(4))
+    groups = ["heat_risk", "housing_risk", "finance_risk", "burden_risk", "coping_risk"]
+    for r in table(s3, lake.curated_key("happy_home_risk")):
+        survey = [r[g] for g in groups]
+        if r["household_code"] == "HH-000004":
+            assert r["lst_hh_score"] is None
+            assert r["risk_score"] == pytest.approx(100 * sum(survey) / 5, abs=1e-4)
+            assert r["exposure"] == pytest.approx((r["heat_risk"] + r["housing_risk"]) / 2, abs=1e-6)
+        else:
+            assert r["risk_score"] == pytest.approx(100 * (sum(survey) + r["lst_hh_score"]) / 6, abs=1e-4)
+            assert r["exposure"] == pytest.approx((r["heat_risk"] + r["housing_risk"] + r["lst_hh_score"]) / 3,
+                                                  abs=1e-6)
+
+
+def test_community_lst_stays_out_of_risk_score(s3):
+    from test_gee import run_gee
     run_hh(s3, town(4))
     before = {r["household_code"]: r["risk_score"] for r in table(s3, lake.curated_key("happy_home_risk"))}
-    run_ghh(s3, hh_rows({1: 44.9, 2: 30.5, 3: 38.0, 4: 41.0}))
+    run_gee(s3)
     run_hh(s3, town(4))
     after = table(s3, lake.curated_key("happy_home_risk"))
     assert {r["household_code"]: r["risk_score"] for r in after} == before
-    assert all(r["lst_hh_c"] is not None for r in after)
+    assert all(r["lst_mean_c"] is not None for r in after)
 
 
 @pytest.mark.parametrize("change", [

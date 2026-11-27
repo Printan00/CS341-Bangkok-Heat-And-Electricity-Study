@@ -69,7 +69,7 @@
    "name": "exposure",
    "type": "float64",
    "nullable": true,
-   "description": "axis 0-1: mean of heat_risk and housing_risk"
+   "description": "axis 0-1: mean of heat_risk, housing_risk and lst_hh_score (D27); heat_risk and housing_risk are required, LST is added when present"
   },
   {
    "name": "vulnerability",
@@ -81,7 +81,7 @@
    "name": "risk_score",
    "type": "float64",
    "nullable": true,
-   "description": "0-100: 100 x the mean of the five groups; null when any group is null"
+   "description": "0-100: 100 x the mean of the five survey groups and lst_hh_score (equal weights, D27); without LST the mean of the five (D28); null when any survey group is null"
   },
   {
    "name": "risk_rank",
@@ -105,7 +105,7 @@
    "name": "lst_score",
    "type": "float64",
    "nullable": true,
-   "description": "lst_mean_c on the fixed 30-45 deg C range -> 0-1; a separate indicator, NOT part of risk_score (D21)"
+   "description": "lst_mean_c on the fixed 30-45 deg C range -> 0-1; community context only, NOT part of risk_score (D27 uses the household value)"
   },
   {
    "name": "lst_batch_id",
@@ -123,7 +123,7 @@
    "name": "lst_hh_score",
    "type": "float64",
    "nullable": true,
-   "description": "lst_hh_c on the fixed 30-45 deg C range -> 0-1; a separate indicator, NOT part of risk_score (D21)"
+   "description": "lst_hh_c on the fixed 30-45 deg C range -> 0-1; the sixth part of risk_score and of the exposure axis (D27)"
   },
   {
    "name": "lst_hh_batch_id",

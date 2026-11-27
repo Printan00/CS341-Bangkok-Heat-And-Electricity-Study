@@ -8,7 +8,7 @@ trusted/, Validate's manifest and the raw file:
   4. required fields (nullable=false in the contract) have no nulls
   5. totals: usable_q1..q3, has_aircon and burden_class counts agree between trusted and curated
   6. risk table: every group score and both axes in 0-1, risk_score in 0-100 and equal to 100 x the mean
-     of the five groups (null exactly when a group is null)
+     of the five groups plus lst_hh_score when it is there (D27/D28; null exactly when a survey group is null)
   7. risk table LST (D21/D25): lst_mean_c / lst_score / lst_batch_id equal the published community_dim row of
      the household's community, lst_hh_c / lst_hh_score / lst_hh_batch_id equal the published household_lst
      row of the household (all null when there is none), and every score = the fixed 30-45 deg C scale
@@ -77,7 +77,8 @@ def risk_problems(rows):
     wrong = 0
     for r in rows:
         groups = [r.get(g) for g in GROUPS]
-        expected = None if any(v is None for v in groups) else 100 * sum(groups) / len(groups)
+        parts = groups + ([r["lst_hh_score"]] if r.get("lst_hh_score") is not None else [])
+        expected = None if any(v is None for v in groups) else 100 * sum(parts) / len(parts)
         got = r.get("risk_score")
         if (expected is None) != (got is None) or (expected is not None and abs(expected - got) > 1e-4):
             wrong += 1
@@ -85,7 +86,7 @@ def risk_problems(rows):
     if outside:
         p.append("risk has %d scores outside 0-1 (risk_score outside 0-100)" % outside)
     if wrong:
-        p.append("risk has %d rows where risk_score is not 100 x the mean of the five groups" % wrong)
+        p.append("risk has %d rows where risk_score is not 100 x the mean of the five groups (+ LST)" % wrong)
     return p
 
 
