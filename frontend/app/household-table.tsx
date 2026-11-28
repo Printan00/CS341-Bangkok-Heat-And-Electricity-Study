@@ -14,6 +14,8 @@ export type HouseholdColumnOptions = Record<string, {
   values?: Record<string, string>;
   order?: string[];
   percentage?: boolean;
+  /** fixed decimals for numbers; default: integers as-is, others 2 decimals */
+  decimals?: number;
 }>;
 
 const orderText = new Intl.Collator("en", { numeric: true });
@@ -38,7 +40,12 @@ export function HouseholdTable({ columns, rows, options, showRowNumbers = false 
     if (value == null) return "—";
     const column = options?.[key];
     if (column?.percentage && typeof value === "number") return `${(100 * value).toFixed(1)}%`;
-    return column?.values?.[String(value)] ?? value;
+    if (typeof value === "number") {
+      if (column?.decimals !== undefined) return value.toFixed(column.decimals);
+      return Number.isInteger(value) ? String(value) : value.toFixed(2);
+    }
+    if (typeof value === "boolean") return column?.values?.[String(value)] ?? (value ? "ใช่" : "ไม่ใช่");
+    return column?.values?.[value] ?? value;
   }
 
   return (

@@ -2,6 +2,7 @@ import { burdenKeys, q2Label, q2Percent, q2Share, type Q2Row } from "../../lib/q
 import { burdenLabels } from "./figures";
 
 export function Q2ResultsTable({ id, title, rows }: { id: string; title: string; rows: Q2Row[] }) {
+  const allHidden = rows.length > 0 && rows.every((row) => burdenKeys.every((key) => row[key] === null));
   return (
     <section aria-labelledby={id}>
       <h3 id={id} className="mb-2 text-sm font-bold">{title}</h3>
@@ -15,11 +16,16 @@ export function Q2ResultsTable({ id, title, rows }: { id: string; title: string;
             </tr>
           </thead>
           <tbody>
-            {rows.map((row) => (
+            {rows.map((row, index) => (
               <tr key={q2Label(row)} className="border-t border-line">
                 <th scope="row" className="px-3 py-2 text-left font-semibold">{q2Label(row)}</th>
                 <td className="px-3 py-2 text-right tabular-nums">{row.households ?? "—"}</td>
-                {burdenKeys.map((key) => (
+                {allHidden ? index === 0 && (
+                  <td colSpan={burdenKeys.length} rowSpan={rows.length} className="border-l border-line bg-canvas px-4 py-3 text-center align-middle text-xs text-muted">
+                    <strong className="block text-sm text-ink">ปกปิดระดับภาระของตารางนี้ทั้งชุด</strong>
+                    บางกลุ่มย่อยมีบ้านน้อยกว่า 5 หลัง ถ้าแสดงบางช่อง จะคำนวณย้อนหาช่องที่ปกปิดได้ จึงแสดงเฉพาะจำนวนบ้านในแต่ละกลุ่ม
+                  </td>
+                ) : burdenKeys.map((key) => (
                   <td className="whitespace-nowrap px-3 py-2 text-right tabular-nums" key={key}>
                     {row[key] === null ? "—" : <>{row[key]} <span className="text-xs text-muted">({q2Percent(q2Share(row[key], row.households))})</span></>}
                   </td>

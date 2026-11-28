@@ -7,7 +7,7 @@ import { analysisLabels, groupLabel, housingFeatures } from "./labels";
 
 const columns = [
   ["analysis", "ชุดวิเคราะห์"], ["group", "กลุ่ม"], ["households", "จำนวนบ้าน"],
-  ["low", "ต่ำ"], ["medium", "กลาง"], ["high", "สูง"], ["percent", "% สูง"], ["average", "เฉลี่ย (0–13)"], ["status", "สถานะ"],
+  ["low", "ต่ำ"], ["medium", "กลาง"], ["high", "สูง"], ["percent", "% สูง"], ["average", "เฉลี่ย (0–13)"], ["status", "หมายเหตุ"],
 ] as const;
 type SortKey = (typeof columns)[number][0];
 
@@ -38,7 +38,7 @@ export function Q1ResultsTable({ rows }: { rows: Q1Row[] }) {
     high: row.high,
     percent: row.kind === "comparison" || row.kind === "profile" ? row.value : null,
     average: row.kind === "comparison" || row.kind === "profile" ? null : row.value,
-    status: row.suppressed ? "ปกปิด" : "แสดงได้",
+    status: row.suppressed ? "ปกปิด" : null,
   })).filter(({ analysis, group }) => !query || `${analysis} ${group}`.toLocaleLowerCase("th").includes(query));
 
   const visible = sort ? filtered.toSorted((a, b) => {
@@ -49,6 +49,9 @@ export function Q1ResultsTable({ rows }: { rows: Q1Row[] }) {
       ? first - second : collator.compare(String(first), String(second));
     return sort.asc ? comparison : -comparison;
   }) : filtered;
+  // Each analysis fills only some columns; hide those that are empty for every visible row.
+  const shownColumns = columns.filter(([key]) => key === "analysis" || key === "group" || key === "households"
+    || visible.some((row) => row[key] !== null));
 
   return (
     <section className="mt-6" id="q1-table" aria-labelledby="q1-table-title">
@@ -79,7 +82,7 @@ export function Q1ResultsTable({ rows }: { rows: Q1Row[] }) {
             <caption className="sr-only">ผลสรุประดับกลุ่มของ Q1</caption>
             <thead className="sticky top-0 z-10 bg-sand">
               <tr>
-                {columns.map(([key, label]) => {
+                {shownColumns.map(([key, label]) => {
                   const active = sort?.key === key;
                   const Icon = active ? (sort.asc ? ArrowUp : ArrowDown) : ArrowDownUp;
                   return (
@@ -94,21 +97,22 @@ export function Q1ResultsTable({ rows }: { rows: Q1Row[] }) {
             <tbody>
               {visible.map((row) => (
                 <tr key={row.key} className="odd:bg-white even:bg-canvas">
-                  {columns.map(([key]) => {
+                  {shownColumns.map(([key]) => {
                     const value = row[key];
                     const display = typeof value === "number" && (key === "percent" || key === "average")
-                      ? `${value.toFixed(key === "percent" ? 1 : 2)}${key === "percent" ? "%" : ""}` : value ?? "—";
+                      ? `${value.toFixed(key === "percent" ? 1 : 2)}${key === "percent" ? "%" : ""}`
+                      : value ?? <span className="text-[#cfc8bc]" aria-label="ไม่มีค่า">–</span>;
                     return key === "group"
                       ? <th key={key} scope="row" className="border-t border-line px-2 py-2 font-medium">{display}</th>
                       : <td key={key} className={`border-t border-line px-2 py-2 tabular-nums ${key === "status" && row.status === "ปกปิด" ? "text-heat" : ""}`}>{display}</td>;
                   })}
                 </tr>
               ))}
-              {!visible.length && <tr><td colSpan={columns.length} className="px-2 py-3 text-muted">ไม่พบกลุ่มที่ตรงกับตัวกรอง</td></tr>}
+              {!visible.length && <tr><td colSpan={shownColumns.length} className="px-2 py-3 text-muted">ไม่พบกลุ่มที่ตรงกับตัวกรอง</td></tr>}
             </tbody>
           </table>
         </div>
-        <p className="mt-2 text-xs text-muted">ขีดหมายถึงค่านั้นไม่มีในชุดวิเคราะห์หรือถูกปกปิด ดูสถานะที่คอลัมน์ท้าย จำนวนบ้านในแต่ละชุดอาจนับครัวเรือนเดิมซ้ำ จึงไม่ควรบวกข้ามชุด</p>
+        <p className="mt-2 text-xs text-muted">ขีดสีจางหมายถึงชุดวิเคราะห์นั้นไม่ได้ใช้ค่านี้ เช่น ชุดเปรียบเทียบใช้ % สูง ส่วนชุดคะแนนเฉลี่ยใช้ค่าเฉลี่ย 0–13 เลือกชุดวิเคราะห์เพื่อซ่อนคอลัมน์ที่ไม่ใช้ แถวที่มีคำว่าปกปิดคือกลุ่มขนาดเล็กที่ซ่อนตัวเลขไว้ จำนวนบ้านในแต่ละชุดนับครัวเรือนเดิมซ้ำได้ จึงไม่ควรบวกข้ามชุด</p>
       </div>
     </section>
   );
