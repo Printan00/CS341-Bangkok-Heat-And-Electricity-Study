@@ -66,6 +66,24 @@
    "description": "T07 summer bill_max / income_min"
   },
   {
+   "name": "income_group",
+   "type": "string",
+   "nullable": true,
+   "description": "T06 A7 income in three groups from income_ord (1-2, 3, 4-5), numbered so they sort (Q2)"
+  },
+  {
+   "name": "burden_class",
+   "type": "string",
+   "nullable": true,
+   "description": "T07 high / possibly_high / low at 10% (D2)"
+  },
+  {
+   "name": "has_aircon",
+   "type": "bool",
+   "nullable": true,
+   "description": "T08 E2.1 owns an air conditioner"
+  },
+  {
    "name": "exposure",
    "type": "float64",
    "nullable": true,

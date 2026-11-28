@@ -749,6 +749,12 @@
    "description": "T06 A7 band upper bound (open band cap 100,000 per D1)"
   },
   {
+   "name": "income_group",
+   "type": "string",
+   "nullable": true,
+   "description": "T06 A7 income in three groups from income_ord (1-2, 3, 4-5), numbered so they sort (Q2)"
+  },
+  {
    "name": "bill_normal_ord",
    "type": "int8",
    "nullable": true,

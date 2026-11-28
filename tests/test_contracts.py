@@ -48,6 +48,8 @@ def test_band_tables_follow_the_spec(contract):
     assert contract["income_bands"][0][1:] == [2500, 5000]  # D1 floor
     assert contract["income_bands"][-1][1:] == [50001, 100000]  # D1 cap
     assert contract["bill_bands"][-1][1:] == [3001, 6000]  # D1 cap
+    covered = [o for _, first, last in contract["income_groups"] for o in range(first, last + 1)]
+    assert covered == list(range(1, len(contract["income_bands"]) + 1))  # each A7 band in exactly one group
     assert contract["thresholds"]["burden_high"] == 0.10 and contract["thresholds"]["burden_implausible"] == 0.50
 
 

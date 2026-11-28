@@ -158,6 +158,19 @@ def test_transform_rules_t01_to_t11(s3):
     assert a["source_dataset"] == "happy_home" and a["batch_id"] == BATCH and len(a["source_file_sha256"]) == 64
 
 
+def test_transform_income_group_joins_the_five_a7_bands_into_three(s3):
+    rows = town(6)
+    answers = ["ต่ำกว่า 5,000 บาท", "5,001-10,000 บาท", "10,001–20,000 บาท",
+               "20,001–50,000 บาท", "มากกว่า 50,000 บาท", "ไม่แน่ใจ"]
+    for row, answer in zip(rows, answers):
+        row[col("A7")] = answer
+    _until_integrate(s3, rows)
+    t = sorted(table(s3, lake.trusted_key(BATCH)), key=lambda r: r["source_row"])
+    assert [r.get("income_group") for r in t] == [
+        "1) ไม่เกิน 10,000", "1) ไม่เกิน 10,000", "2) 10,001-20,000",
+        "3) มากกว่า 20,000", "3) มากกว่า 20,000", None]
+
+
 def test_housing_score_needs_four_clear_answers(s3):
     rows = town(2)
     rows[0][col("B6")] = rows[0][col("B7")] = "ไม่แน่ใจ"
@@ -208,6 +221,23 @@ def test_integrate_writes_the_five_group_table_for_an_ordinary_household(s3):
     groups = [r[g] for g in ("heat_risk", "housing_risk", "finance_risk", "burden_risk", "coping_risk")]
     assert r["risk_score"] == pytest.approx(100 * sum(groups) / 5, abs=1e-4)
     assert r["risk_quadrant"] == "low_heat_coping" and r["batch_id"] == BATCH and r["source_row"] == 2
+
+
+def test_risk_table_carries_the_q2_columns_from_trusted(s3):
+    rows = town(4)
+    rows[0][col("A7")] = "5,001–10,000 บาท"
+    rows[0][col("E1.2")] = "1,001–2,000 บาท"  # burden high
+    rows[1][col("E2.1", "เครื่องปรับอากาศ")] = 1
+    rows[2][col("A7")] = "ไม่แน่ใจ"  # no income -> no group, no burden class
+    _until_integrate(s3, rows)
+    trusted = {r["household_code"]: r for r in table(s3, lake.trusted_key(BATCH))}
+    risk_table = table(s3, lake.staging_key(BATCH, RISK))
+    for name in ("income_group", "burden_class", "has_aircon"):
+        assert [r.get(name) for r in risk_table] == [trusted[r["household_code"]][name] for r in risk_table], name
+    first, second, third = sorted(risk_table, key=lambda r: r["source_row"])[:3]
+    assert (first.get("income_group"), first.get("burden_class")) == ("1) ไม่เกิน 10,000", "high")
+    assert second.get("has_aircon") is True
+    assert (third.get("income_group"), third.get("burden_class")) == (None, None)
 
 
 def test_integrate_keeps_the_old_score_columns_until_the_team_decides(s3):

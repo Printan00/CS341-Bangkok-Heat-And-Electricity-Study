@@ -121,6 +121,9 @@ def trusted_row(values, passed, manifest, c):
     for prefix, bill in (("burden", summer), ("burden_normal", normal)):
         lo, hi = burden(bill, income) if bill and income else (None, None)
         out[prefix + "_min"], out[prefix + "_max"] = lo, hi
+    order = out["income_ord"]
+    out["income_group"] = next((g for g, first, last in c["income_groups"] if first <= order <= last), None) \
+        if order else None
     lo, hi = out["burden_min"], out["burden_max"]
     out["burden_class"] = burden_class(lo, hi, t["burden_high"]) if lo is not None else None
     out["burden_class_6pct"] = burden_class(lo, hi, t["burden_high_sensitivity"]) if lo is not None else None
