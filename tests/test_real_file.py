@@ -225,3 +225,12 @@ def test_counting_young_children_and_pregnancy_would_flag_few_more_households(ri
     current = [sum(r[g] for g in GROUPS) for r in risk]
     alternative = [c + d for c, d in zip(current, shift)]
     assert len(top_group(current, 18) & top_group(alternative, 18)) == 17
+
+
+def test_risk_table_q2_columns_match_the_q2_results(risk):
+    groups = ["1) ไม่เกิน 10,000", "2) 10,001-20,000", "3) มากกว่า 20,000"]
+    assert [sum(r.get("income_group") == g for r in risk) for g in groups] == [34, 23, 31]
+    assert [sum(r.get("income_group") == g and r.get("burden_class") == "high" for r in risk)
+            for g in groups] == [27, 8, 0]
+    assert Counter(r.get("burden_class") for r in risk) == {"high": 35, "possibly_high": 31, "low": 22}
+    assert Counter(r.get("has_aircon") for r in risk) == {True: 46, False: 42}

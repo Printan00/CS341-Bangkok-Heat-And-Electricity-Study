@@ -58,7 +58,7 @@ Transform ทำงานเฉพาะกับแถวที่ผ่าน 
 | T03 | A12 ที่เป็นตัวเลข → ช่วง (2 → `2–3`, 7 → `6+`) | `household_size_band` | Q2, Q3 |
 | T04 | ชื่อชุมชน 16 แบบ → 2 ชุมชน ด้วยตาราง map; พิกัดใช้ตรวจซ้ำ (ไม่ตรง → WARN) ; map ไม่ได้ → community\_key = unknown และเก็บคำแนะนำจากพิกัดให้คนตรวจ (D5) | `community_key`, `community_source` (label / unknown), `community_suggested` | ทุกข้อ |
 | T05 | พิกัดไม่เข้า trusted (ดูหัวข้อ "การตัดสินใจระหว่างเขียนโค้ด") | — | แผนที่ |
-| T06 | แปลงช่วงเป็นลำดับ ขอบล่าง และขอบบน (ตารางด้านล่าง) | `income_ord/min/max`, `bill_normal_ord/min/max`, `bill_summer_ord/min/max` | Q2, Q3 |
+| T06 | แปลงช่วงเป็นลำดับ ขอบล่าง และขอบบน (ตารางด้านล่าง) | `income_ord/min/max`, `income_group` (3 กลุ่มจาก `income_ord`: 1–2, 3, 4–5), `bill_normal_ord/min/max`, `bill_summer_ord/min/max` | Q2, Q3 |
 | T07 | ภาระค่าไฟ = ค่าไฟ ÷ รายได้ คิดเป็นช่วง (สูตรด้านล่าง) หน้าร้อนเป็นหลัก ช่วงปกติใช้เทียบ | `burden_min`, `burden_max`, `burden_class` (high ≥ 10%), `burden_class_6pct` (ทดสอบที่ 6%; D2), `burden_normal_min/max` | Q2, Q3 |
 | T08 | มีแอร์หรือไม่ จาก E2.1/เครื่องปรับอากาศ | `has_aircon` | Q2, Q3 |
 | T09 | คะแนนสภาพบ้านเสี่ยงร้อน 0–5: B4 สังกะสี/เมทัลชีท, B6 ไม่มีฝ้า, B7 ไม่มีฉนวน, B8 ระบายอากาศไม่ดี, B9 ร่มเงาน้อย/ไม่มีเลย ข้อละ 1; ไม่แน่ใจไม่นับ; ตอบชัดน้อยกว่า 4 ข้อ → null | `housing_heat_score`, `housing_items_answered` | Q1, Q3 |
