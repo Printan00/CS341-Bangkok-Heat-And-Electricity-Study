@@ -1,5 +1,4 @@
 import { Suspense } from "react";
-import { canViewHouseholdDetails } from "../../lib/household-view";
 import { fetchQ3 } from "../../lib/q3-data";
 import { DashboardStatus } from "../dashboard-ui";
 import { HouseholdTable, type HouseholdData } from "../household-table";
@@ -24,9 +23,7 @@ async function HouseholdResults() {
   return <HouseholdTable {...data} />;
 }
 
-export async function Q3HouseholdSection() {
-  if (!await canViewHouseholdDetails()) return null;
-
+export function Q3HouseholdSection() {
   return (
     <section className="mt-6" aria-labelledby="q3-household-title">
       <h2 id="q3-household-title" className="mb-2 section-title">ตารางรายครัวเรือน</h2>

@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { canViewHouseholdDetails } from "../../lib/household-view";
 import { getQ2Data, q2Groups, q2Percent, q2Share } from "../../lib/q2-data";
 import { DashboardHeading, DashboardStatus } from "../dashboard-ui";
 import { BurdenChart, CoolingByIncome } from "./figures";
@@ -14,7 +13,7 @@ export const metadata: Metadata = {
 };
 
 export default async function Q2Page() {
-  const [result, showHouseholds] = await Promise.all([getQ2Data(), canViewHouseholdDetails()]);
+  const result = await getQ2Data();
   const rows = result.status === "ready" ? result.rows : [];
   const income = q2Groups(rows, "income");
   const cooling = q2Groups(rows, "cooling");
@@ -41,7 +40,7 @@ export default async function Q2Page() {
             {sampleSize !== null && <span className="font-semibold tabular-nums">{sampleSize} ครัวเรือน</span>}
             <a className="font-semibold text-energy underline underline-offset-2" href="#q2-comparison">ผลเปรียบเทียบ</a>
             <a className="font-semibold text-energy underline underline-offset-2" href="#q2-data-tables">ตารางข้อมูลทั้งหมด</a>
-            {showHouseholds && <a className="font-semibold text-energy underline underline-offset-2" href="#q2-households">ตารางรายครัวเรือน</a>}
+            <a className="font-semibold text-energy underline underline-offset-2" href="#q2-households">ตารางรายครัวเรือน</a>
           </nav>
 
           <aside className="rounded-panel bg-energy-soft p-3 text-sm compact:px-5" aria-labelledby="q2-reading-title">
@@ -89,7 +88,7 @@ export default async function Q2Page() {
               : "ยังไม่มีข้อมูลครัวเรือนสำหรับ Q2"}
         </DashboardStatus>
       )}
-      {showHouseholds && <Q2HouseholdSection />}
+      <Q2HouseholdSection />
       <p className="mt-4 border-t border-line pt-3 text-xs text-muted">ที่มา แบบสำรวจ Happy Home · AWS Athena / <code>happy_home_risk</code></p>
     </>
   );

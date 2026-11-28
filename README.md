@@ -61,7 +61,7 @@ test -f .env.local || cp .env.example .env.local
 npm run dev
 ```
 
-เปิด **http://localhost:3000** แล้วเลือกหน้า `/q1`, `/q2` หรือ `/q3` ตารางรายครัวเรือนของ Q2 และ Q3 เปิดเฉพาะ dev บนเครื่องและต้องมีสิทธิ์เรียก IAM endpoint แยก เมื่อรันแบบ production หน้าเว็บจะแสดงผลระดับกลุ่ม
+เปิด **http://localhost:3000** แล้วเลือกหน้า `/q1`, `/q2` หรือ `/q3` หน้า Q2 และ Q3 แสดงตารางรายครัวเรือนทั้งบนเครื่องและบน Vercel โดยต้องมีสิทธิ์เรียก endpoint `/households`
 
 [หา URL จาก Terraform, ตั้งสิทธิ์ และแก้ปัญหาการเชื่อมต่อ](Docs/Runbook.md#เชื่อมแดชบอร์ดกับ-aws)
 

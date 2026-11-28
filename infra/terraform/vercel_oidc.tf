@@ -47,7 +47,7 @@ resource "aws_iam_role" "vercel_dashboard" {
   assume_role_policy = data.aws_iam_policy_document.vercel_dashboard_trust.json
 }
 
-# Summary routes only; household-level routes stay local-dev only.
+# Summary and household-level routes for Q1-Q3.
 resource "aws_iam_role_policy" "vercel_dashboard_invoke" {
   name = "invoke-dashboard-summary"
   role = aws_iam_role.vercel_dashboard.id
@@ -57,8 +57,8 @@ resource "aws_iam_role_policy" "vercel_dashboard_invoke" {
       Effect = "Allow"
       Action = "execute-api:Invoke"
       Resource = [
-        for q in ["q1", "q2", "q3"] :
-        "${aws_apigatewayv2_api.dashboard.execution_arn}/$default/GET/dashboard/${q}"
+        for path in ["q1", "q2", "q3", "q2/households", "q3/households"] :
+        "${aws_apigatewayv2_api.dashboard.execution_arn}/$default/GET/dashboard/${path}"
       ]
     }]
   })
