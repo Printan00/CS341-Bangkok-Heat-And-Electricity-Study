@@ -1,7 +1,7 @@
 "use client";
 
 import { ArrowDown, ArrowDownUp, ArrowUp } from "lucide-react";
-import { useState } from "react";
+import { useId, useState } from "react";
 import type { RiskMetric, RiskRow } from "../lib/q3-data";
 import { groupInfo } from "../lib/q3-groups";
 
@@ -31,7 +31,8 @@ function cellValue(row: RiskRow, key: SortKey) {
   return row[key];
 }
 
-export function Q3Table({ rows }: { rows: RiskRow[] }) {
+export function Q3Table({ rows, labelledBy }: { rows: RiskRow[]; labelledBy: string }) {
+  const sortHelpId = useId();
   const [sort, setSort] = useState<{ key: SortKey; direction: Direction }>({ key: "priority", direction: "asc" });
   const ordered = rows.toSorted((a, b) => {
     const left = cellValue(a, sort.key);
@@ -52,9 +53,9 @@ export function Q3Table({ rows }: { rows: RiskRow[] }) {
 
   return (
     <>
-      <p className="mb-2 text-xs text-muted" id="q3-sort-help">กดหัวคอลัมน์เพื่อเรียงลำดับ บนจอเล็กเลื่อนตารางด้านข้างเพื่อดูคะแนนทั้งหมด</p>
-      <div className="panel overflow-x-auto" role="region" aria-labelledby="priority-title" tabIndex={0}>
-        <table className="w-full min-w-[990px] border-collapse text-left text-xs" aria-describedby="q3-sort-help">
+      <p className="mb-2 text-xs text-muted" id={sortHelpId}>กดหัวคอลัมน์เพื่อเรียงลำดับ บนจอเล็กเลื่อนตารางด้านข้างเพื่อดูคะแนนทั้งหมด</p>
+      <div className="panel overflow-x-auto" role="region" aria-labelledby={labelledBy} tabIndex={0}>
+        <table className="w-full min-w-[990px] border-collapse text-left text-xs" aria-describedby={sortHelpId}>
           <caption className="sr-only">จำนวนครัวเรือนและคะแนนเฉลี่ยตามกลุ่มความเสี่ยง</caption>
           <thead className="bg-sand font-semibold text-muted">
             <tr>

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { DashboardHeading } from "../dashboard-ui";
 import { Q3Section } from "../q3-section";
+import { Q3HouseholdSection } from "./household-section";
 
 export const dynamic = "force-dynamic";
 
@@ -14,6 +15,7 @@ export default function Q3Page() {
       <DashboardHeading question="Q3" title="กลุ่มไหนควรได้รับความช่วยเหลือก่อน?"
         description="จัดกลุ่มตามการเผชิญความร้อนและความเปราะบาง · แบบสำรวจ Happy Home · คะแนนรุ่น D27/D28" />
       <Q3Section />
+      <Q3HouseholdSection />
     </>
   );
 }

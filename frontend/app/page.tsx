@@ -4,7 +4,7 @@ import { DashboardCardTitle, DashboardDetailLink, DashboardHeading, DashboardSta
 import { getDashboardData, percent } from "../lib/dashboard-data";
 import { getQ1Data, wallComparison } from "../lib/q1-data";
 import { getQ3Data } from "../lib/q3-data";
-import { groupInfo } from "../lib/q3-groups";
+import { Q3Table } from "./q3-table";
 
 const statIcons = { sample: Users, heat: Thermometer, support: ShieldCheck };
 const statTones = { sample: "bg-sand text-muted", heat: "bg-heat-soft text-heat", support: "bg-olive-soft text-olive" };
@@ -23,7 +23,7 @@ function SummaryStat({ value, label, tone }: { value: string; label: string; ton
 }
 
 type PreviewRow = { label: string; value: string; width: number | null };
-const barColors = { heat: "bg-heat", energy: "bg-[#25877c]", support: "bg-[#898c4e]" };
+const barColors = { heat: "bg-heat", energy: "bg-[#25877c]" };
 
 function PreviewBars({ rows, tone }: { rows: PreviewRow[]; tone: keyof typeof barColors }) {
   return (
@@ -52,13 +52,6 @@ async function OverviewResults() {
   const highShare = sample && high?.households != null ? `${(100 * high.households / sample).toFixed(1)}%` : "—";
   const q3Rows = q3.status === "ready" ? q3.rows : [];
   const priority = q3Rows.find(({ group }) => group === "help_first");
-  const priorityTotal = q3Rows.some(({ suppressed }) => suppressed) ? 0
-    : q3Rows.reduce((total, { households }) => total + (households ?? 0), 0);
-  const support = q3Rows.toSorted((a, b) => groupInfo[a.group].order - groupInfo[b.group].order).map(({ group, households }) => ({
-    label: groupInfo[group].label,
-    value: households?.toString() ?? "—",
-    width: households != null && priorityTotal ? 100 * households / priorityTotal : null,
-  }));
   const income = q2.income.map((row) => {
     const value = percent(...row.count);
     return { label: row.label, value: value == null ? "—" : `${value}%`, width: value };
@@ -92,8 +85,7 @@ async function OverviewResults() {
 
         <article className="panel min-w-0 space-y-2 p-4 @min-[44rem]:col-span-2" id="priority" aria-labelledby="overview-q3">
           <DashboardCardTitle question="Q3" id="overview-q3" title="กลุ่มไหนควรได้รับความช่วยเหลือก่อน?" />
-          <p className="text-xs text-muted">จำนวนบ้านตามการเผชิญความร้อนและความเปราะบาง</p>
-          {support.length ? <PreviewBars tone="support" rows={support} /> : <p className="my-2 text-sm text-muted">ยังไม่มีผลสรุป Q3 ให้แสดง</p>}
+          {q3Rows.length ? <Q3Table rows={q3Rows} labelledBy="overview-q3" /> : <p className="my-2 text-sm text-muted">ยังไม่มีผลสรุป Q3 ให้แสดง</p>}
           <DashboardDetailLink question="Q3" />
         </article>
       </div>

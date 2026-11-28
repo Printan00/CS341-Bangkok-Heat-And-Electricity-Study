@@ -15,14 +15,13 @@ const sections = [
 
 export function SectionNavigation() {
   const pathname = usePathname();
-  const active = pathname === "/internal/q3" ? "/q3" : pathname;
 
   return (
     <nav aria-label="ส่วนต่าง ๆ ของงานวิจัย">
       <ul className="grid grid-cols-2 gap-1 compact:grid-cols-4 desktop:grid-cols-1">
         {sections.map(({ href, label, icon: Icon }) => (
           <li key={href}>
-            <Link className="nav-link" href={href} prefetch={false} aria-current={active === href ? (pathname === href ? "page" : "location") : undefined}>
+            <Link className="nav-link" href={href} prefetch={false} aria-current={pathname === href ? "page" : undefined}>
               <Icon className="size-4 shrink-0" aria-hidden="true" />{label}
             </Link>
           </li>
@@ -40,7 +39,7 @@ export function DashboardBreadcrumb() {
       {pathname === "/" ? <span>แดชบอร์ด</span> : <Link href="/" className="hover:text-heat">แดชบอร์ด</Link>}
       <span aria-hidden="true" className="px-1.5">/</span>
       <strong className="font-semibold text-ink" aria-current="page">
-        {pathname === "/internal/q3" ? "ตารางรายครัวเรือน Q3" : section?.label ?? "ไม่พบหน้า"}
+        {section?.label ?? "ไม่พบหน้า"}
       </strong>
     </nav>
   );
@@ -92,7 +91,7 @@ export function Methodology() {
           <dt className="mt-[13px] font-semibold">ภาระค่าไฟสูง</dt>
           <dd className="text-muted">ค่าไฟหน้าร้อนคิดเป็นอย่างน้อย 10% ของรายได้ต่อเดือนตามเกณฑ์ตัวอย่าง</dd>
           <dt className="mt-[13px] font-semibold">ลำดับความช่วยเหลือ</dt>
-          <dd className="text-muted">กลุ่มช่วยก่อนมีคะแนนการเผชิญความร้อนและความเปราะบางอย่างน้อย 0.5 ทั้งสองแกน ตัวเลขแสดงเฉพาะระดับกลุ่ม</dd>
+          <dd className="text-muted">กลุ่มช่วยก่อนมีคะแนนการเผชิญความร้อนและความเปราะบางอย่างน้อย 0.5 ทั้งสองแกน ตารางสรุปแสดงคะแนนเฉลี่ยและจำนวนครัวเรือนของแต่ละกลุ่ม</dd>
         </dl>
       </dialog>
     </>
