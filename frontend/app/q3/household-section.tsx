@@ -1,8 +1,8 @@
-import { headers } from "next/headers";
 import { Suspense } from "react";
+import { canViewHouseholdDetails } from "../../lib/household-view";
 import { fetchQ3 } from "../../lib/q3-data";
 import { DashboardStatus } from "../dashboard-ui";
-import { HouseholdTable, type HouseholdData } from "./household-table";
+import { HouseholdTable, type HouseholdData } from "../household-table";
 
 async function HouseholdResults() {
   const endpoint = process.env.Q3_API_URL;
@@ -25,10 +25,7 @@ async function HouseholdResults() {
 }
 
 export async function Q3HouseholdSection() {
-  if (process.env.NODE_ENV !== "development" || process.env.VERCEL) return null;
-
-  const host = (await headers()).get("host");
-  if (!host || !/^(?:localhost|127\.0\.0\.1)(?::\d+)?$/.test(host)) return null;
+  if (!await canViewHouseholdDetails()) return null;
 
   return (
     <section className="mt-6" aria-labelledby="q3-household-title">
