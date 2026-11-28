@@ -171,6 +171,32 @@ npm run dev
 
 เปิด **http://localhost:3000** โหมด dev bind กับ loopback และตารางรายครัวเรือนแสดงเฉพาะ Q2/Q3 บน dev ในเครื่อง สำหรับ production ใช้สิทธิ์อ่านเส้นทางผลสรุปและเก็บ credentials ฝั่งเซิร์ฟเวอร์ ไฟล์ `.env.local` ถูกกันจาก Git แล้ว
 
+### Deploy Next.js frontend บน Vercel
+
+สร้าง Vercel project จาก repository แล้วกำหนด **Root Directory** เป็น `frontend` โดยใช้ Next.js preset และ build command `npm run build` ตั้ง Production Branch เป็น `main` โค้ดจะเรียก API Gateway ด้วย AWS SigV4 จากฝั่ง server; ห้ามอัปโหลด `.env.local`, AWS access key หรือ `AWS_PROFILE` ไป Vercel
+
+ดูรายละเอียด OIDC issuer และ trust policy ล่าสุดจาก [Vercel: Connect to AWS](https://vercel.com/docs/oidc/aws)
+
+ใช้ Vercel OIDC เพื่อให้ function รับ AWS credentials ชั่วคราว:
+
+1. ใน AWS IAM เพิ่ม OpenID Connect provider ของ Vercel โดยใช้ issuer `https://oidc.vercel.com/<team-slug>` และ audience `https://vercel.com/<team-slug>` ตาม team slug ของ Vercel
+2. สร้าง IAM role ที่ trust เฉพาะ Vercel project และ production environment นั้น ตัวอย่างเงื่อนไขใน trust policy:
+
+   ```json
+   {
+     "StringEquals": {
+       "oidc.vercel.com/<team-slug>:aud": "https://vercel.com/<team-slug>",
+       "oidc.vercel.com/<team-slug>:sub": "owner:<team-slug>:project:<project-name>:environment:production"
+     }
+   }
+   ```
+
+   ให้กำหนด Federated principal เป็น `arn:aws:iam::<account-id>:oidc-provider/oidc.vercel.com/<team-slug>` และ action เป็น `sts:AssumeRoleWithWebIdentity` อย่าใช้ wildcard สำหรับ project หรือ environment โดยไม่จำเป็น
+3. แนบ permission policy ให้ role นี้เรียกได้เฉพาะเส้นทางสรุป `execute-api:Invoke` โดยใช้ ARN จาก Terraform outputs `dashboard_q1_invoke_arn`, `dashboard_q2_invoke_arn` และ `dashboard_q3_invoke_arn` เท่านั้น ไม่ต้องให้สิทธิ์ `dashboard_q2_households_invoke_arn` หรือ `dashboard_q3_households_invoke_arn`
+4. เพิ่ม Environment Variables ใน Vercel project (Production): `AWS_ROLE_ARN` เป็น ARN ของ role, `Q3_API_URL` เป็น URL จาก `dashboard_q3_api_url` และตั้ง `Q1_API_URL`/`Q2_API_URL` เมื่อใช้ API Gateway คนละตัวกับ Q3 หากต้องการ Preview deployment ให้เพิ่ม trust สำหรับ preview แยกต่างหากและจำกัด project/environment เช่นเดียวกัน
+
+หน้าเว็บจะแสดงผลสรุปจาก AWS โดยไม่เก็บ long-lived AWS keys บน Vercel ส่วนตารางรายครัวเรือนยังปิดใน Vercel ตาม `canViewHouseholdDetails()` และการตั้งค่า Vercel ควรทำโดยผู้ดูแล AWS/Vercel ของทีม
+
 ## ทดสอบและแก้ปัญหา
 
 จากราก repo รันชุดเทสต์ Python ด้วยข้อมูลสังเคราะห์ได้โดยไม่ต้องเชื่อม AWS
