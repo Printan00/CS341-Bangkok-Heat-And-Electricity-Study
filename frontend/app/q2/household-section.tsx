@@ -16,12 +16,12 @@ const columnOptions: HouseholdColumnOptions = {
     values: { low: "ต่ำ", possibly_high: "อาจสูง", high: "สูงแน่นอน" } },
   burden_min: { label: "ค่าไฟต่อรายได้ ต่ำสุด", percentage: true },
   burden_max: { label: "ค่าไฟต่อรายได้ สูงสุด", percentage: true },
-  burden_risk: { label: "คะแนนภาระค่าไฟ" },
-  finance_risk: { label: "คะแนนความเสี่ยงการเงิน" },
-  coping_risk: { label: "คะแนนข้อจำกัดการรับมือ" },
-  exposure: { label: "คะแนนเผชิญความร้อน" },
-  vulnerability: { label: "คะแนนความเปราะบาง" },
-  risk_score: { label: "คะแนนเสี่ยงรวม" },
+  burden_risk: { label: "คะแนนภาระค่าไฟ (0–1)", decimals: 2 },
+  finance_risk: { label: "คะแนนความเสี่ยงการเงิน (0–1)", decimals: 2 },
+  coping_risk: { label: "คะแนนข้อจำกัดการรับมือ (0–1)", decimals: 2 },
+  exposure: { label: "คะแนนเผชิญความร้อน (0–1)", decimals: 2 },
+  vulnerability: { label: "คะแนนความเปราะบาง (0–1)", decimals: 2 },
+  risk_score: { label: "คะแนนเสี่ยงรวม (0–100)", decimals: 1 },
   risk_rank: { label: "อันดับความเสี่ยง" },
 };
 

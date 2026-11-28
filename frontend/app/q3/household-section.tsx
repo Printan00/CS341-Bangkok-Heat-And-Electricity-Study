@@ -1,7 +1,40 @@
 import { Suspense } from "react";
 import { fetchQ3 } from "../../lib/q3-data";
 import { DashboardStatus } from "../dashboard-ui";
-import { HouseholdTable, type HouseholdData } from "../household-table";
+import { HouseholdTable, type HouseholdColumnOptions, type HouseholdData } from "../household-table";
+
+const score = (label: string) => ({ label: `${label} (0–1)`, decimals: 2 });
+const columnOptions: HouseholdColumnOptions = {
+  household_code: { label: "รหัสครัวเรือน" },
+  risk_rank: { label: "อันดับ" },
+  risk_quadrant: { label: "กลุ่ม", order: ["help_first", "watch", "low_heat_limited", "low_heat_coping"], values: {
+    help_first: "ช่วยก่อน", watch: "เฝ้าระวัง", low_heat_limited: "ร้อนน้อย · รับมือยาก", low_heat_coping: "ร้อนน้อย · รับมือได้",
+  } },
+  risk_score: { label: "คะแนนเสี่ยงรวม (0–100)", decimals: 1 },
+  exposure: score("เผชิญความร้อน"),
+  vulnerability: score("ความเปราะบาง"),
+  heat_risk: score("ผลกระทบความร้อน"),
+  housing_risk: score("สภาพบ้าน"),
+  lst_hh_score: score("คะแนน LST รายบ้าน"),
+  finance_risk: score("การเงิน"),
+  burden_risk: score("ภาระค่าไฟ"),
+  coping_risk: score("ข้อจำกัดการรับมือ"),
+  burden_min: { label: "ค่าไฟต่อรายได้ ต่ำสุด", percentage: true },
+  burden_max: { label: "ค่าไฟต่อรายได้ สูงสุด", percentage: true },
+  lst_hh_c: { label: "LST รายบ้าน (°C)", decimals: 1 },
+  lst_mean_c: { label: "LST ชุมชน (°C)", decimals: 1 },
+  lst_score: score("คะแนน LST ชุมชน"),
+  batch_id: { label: "batch แบบสำรวจ" },
+  lst_batch_id: { label: "batch LST ชุมชน" },
+  lst_hh_batch_id: { label: "batch LST รายบ้าน" },
+  source_row: { label: "แถวในไฟล์ดิบ" },
+};
+const preferred = Object.keys(columnOptions);
+
+/** Most useful columns first; anything unexpected from the API keeps its place at the end. */
+function orderColumns(columns: string[]) {
+  return [...preferred.filter((key) => columns.includes(key)), ...columns.filter((key) => !preferred.includes(key))];
+}
 
 async function HouseholdResults() {
   const endpoint = process.env.Q3_API_URL;
@@ -15,12 +48,12 @@ async function HouseholdResults() {
         !("rows" in payload) || !Array.isArray(payload.rows)) {
       throw new Error("Unexpected household response");
     }
-    data = { columns: payload.columns, rows: payload.rows };
+    data = { columns: orderColumns(payload.columns), rows: payload.rows };
   } catch (error) {
     console.error("Q3 household request failed", error instanceof Error ? error.message : "Unknown error");
     return <DashboardStatus>ดึงข้อมูลรายครัวเรือนไม่สำเร็จ กรุณาตรวจสิทธิ์ AWS ของโปรไฟล์ที่กำลังใช้</DashboardStatus>;
   }
-  return <HouseholdTable {...data} />;
+  return <HouseholdTable {...data} options={columnOptions} showRowNumbers />;
 }
 
 export function Q3HouseholdSection() {
