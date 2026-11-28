@@ -142,7 +142,6 @@ aws athena get-query-results --query-execution-id "$BHES_QUERY_ID"
 .venv/bin/python analytics/run_athena.py
 .venv/bin/python analytics/compare_athena_local.py --data-dir data
 .venv/bin/python analytics/significance.py --write
-.venv/bin/python dashboard/build.py
 ```
 
 ## เชื่อมแดชบอร์ดกับ AWS

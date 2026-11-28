@@ -79,7 +79,7 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--data-dir", default="data", type=Path)
     ap.add_argument("--results", default=Path(__file__).parent / "results", type=Path)
-    ap.add_argument("--write", action="store_true", help="write results/verification.json (counts only; used by dashboard/build.py)")
+    ap.add_argument("--write", action="store_true", help="write results/verification.json (counts only)")
     args = ap.parse_args()
     rows = L.compute(L.Sheet(args.data_dir / L.FILE))
     R = args.results
