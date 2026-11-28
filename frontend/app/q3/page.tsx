@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { DashboardHeading } from "../dashboard-ui";
 import { Q3Section } from "../q3-section";
 import { Q3HouseholdSection } from "./household-section";
+import { Q3Method } from "./method";
 
 export const dynamic = "force-dynamic";
 
@@ -16,6 +17,7 @@ export default function Q3Page() {
         description="จัดกลุ่มตามการเผชิญความร้อนและความเปราะบาง · แบบสำรวจ Happy Home · คะแนนรุ่น D27/D28" />
       <Q3Section />
       <Q3HouseholdSection />
+      <Q3Method />
     </>
   );
 }

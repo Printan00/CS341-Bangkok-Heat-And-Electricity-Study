@@ -3,6 +3,7 @@ import { getQ2Data, q2Groups, q2Percent, q2Share } from "../../lib/q2-data";
 import { DashboardHeading, DashboardStatus } from "../dashboard-ui";
 import { BurdenChart, CoolingByIncome } from "./figures";
 import { Q2HouseholdSection } from "./household-section";
+import { Q2Method } from "./method";
 import { Q2ResultsTable } from "./results-table";
 
 export const dynamic = "force-dynamic";
@@ -41,6 +42,7 @@ export default async function Q2Page() {
             <a className="font-semibold text-energy underline underline-offset-2" href="#q2-comparison">ผลเปรียบเทียบ</a>
             <a className="font-semibold text-energy underline underline-offset-2" href="#q2-data-tables">ตารางข้อมูลทั้งหมด</a>
             <a className="font-semibold text-energy underline underline-offset-2" href="#q2-households">ตารางรายครัวเรือน</a>
+            <a className="font-semibold text-energy underline underline-offset-2" href="#q2-method">วิธีคำนวณ</a>
           </nav>
 
           <aside className="rounded-panel bg-energy-soft p-3 text-sm compact:px-5" aria-labelledby="q2-reading-title">
@@ -65,14 +67,6 @@ export default async function Q2Page() {
             </p>}
           </section>
 
-          <section className="panel p-4 compact:p-5" aria-labelledby="q2-method">
-            <h2 id="q2-method" className="text-base font-bold">วิธีอ่านผล</h2>
-            <ul className="mt-2 grid gap-2 text-sm text-muted @min-[44rem]:grid-cols-2">
-              <li><strong className="text-ink">ตัวหาร</strong> ใช้จำนวนบ้านทั้งหมดในกลุ่ม รวมบ้านที่ข้อมูลค่าไฟหรือรายได้ไม่ครบ ซึ่งแสดงเป็นหมวดแยก</li>
-              <li><strong className="text-ink">การมีแอร์</strong> ใช้การมีเครื่องปรับอากาศเป็นตัวแทนการเข้าถึงการทำความเย็น การประมาณผลของการใช้แอร์ต่อค่าไฟต้องใช้ข้อมูลการใช้งานและปัจจัยอื่นเพิ่ม</li>
-            </ul>
-          </section>
-
           <section id="q2-data-tables" className="scroll-mt-4 space-y-3" aria-labelledby="q2-tables-title">
             <h2 id="q2-tables-title" className="section-title">ตารางข้อมูลทั้งหมด</h2>
             <p className="text-xs text-muted">ตัวเลขแสดงจำนวนบ้านและร้อยละของบ้านทั้งหมดในแถวนั้น เลื่อนตารางด้านข้างบนจอเล็ก ขีด (—) หมายถึงปกปิดตัวเลขเพื่อคุ้มครองกลุ่มขนาดเล็กและป้องกันการคำนวณย้อนกลับ</p>
@@ -89,6 +83,7 @@ export default async function Q2Page() {
         </DashboardStatus>
       )}
       <Q2HouseholdSection />
+      <Q2Method />
       <p className="mt-4 border-t border-line pt-3 text-xs text-muted">ที่มา แบบสำรวจ Happy Home · AWS Athena / <code>happy_home_risk</code></p>
     </>
   );
