@@ -276,6 +276,9 @@ b_{\text{mid}} = \begin{cases} \sqrt{b_{\min}\, b_{\max}} & b_{\min} > 0 \\ b_{\
 | `household_code` | string | รหัสบ้านนามแฝง (คอลัมน์เดิม ไม่มีพิกัดหรือชื่อ) |
 | `heat_risk`, `housing_risk`, `finance_risk`, `burden_risk`, `coping_risk` | float64 | คะแนน 5 หมวด 0–1 |
 | `burden_min`, `burden_max` | float64 | ช่วงภาระค่าไฟก่อนย่อเป็นคะแนน |
+| `income_group` | string | กลุ่มรายได้ 3 กลุ่มจาก A7 สำหรับ Q2: `1) ไม่เกิน 10,000`, `2) 10,001-20,000`, `3) มากกว่า 20,000` (บาท/เดือน) |
+| `burden_class` | string | ระดับภาระค่าไฟที่เกณฑ์ 10% (T07, D2): `high`, `possibly_high`, `low` |
+| `has_aircon` | bool | มีเครื่องปรับอากาศหรือไม่ (T08) |
 | `exposure`, `vulnerability` | float64 | แกนสองแกน 0–1 |
 | `risk_score` | float64 | คะแนนรวม 0–100 |
 | `risk_rank` | int32 | อันดับ 1 = เสี่ยงสุด คะแนนเท่ากันได้อันดับเดียวกัน |
