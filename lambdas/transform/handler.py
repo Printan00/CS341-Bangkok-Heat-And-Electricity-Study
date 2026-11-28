@@ -3,12 +3,16 @@
 Reads the raw file again plus Validate's manifest.json, and only proceeds when the manifest
 status is "passed". Columns follow contracts/trusted_happy_home.json exactly (an allowlist):
 no coordinates, community name text or interviewer code. A rerun overwrites the same key.
+gee_lst / gee_lst_household: the passed rows of the CSV -> contracts/trusted_gee_lst[_household].json.
 """
 from common import lake, parquet
+from common.gee import SOURCES as GEE_SOURCES
 from common.xlsx import read_workbook
+from transform import gee
 from transform.build import trusted_rows
 
-SCHEMAS = {"happy_home": ("happy_home", "trusted_happy_home")}  # source -> (rules contract, schema contract)
+SCHEMAS = {"happy_home": ("happy_home", "trusted_happy_home"),  # source -> (rules contract, schema contract)
+           **{s: (c["rules"], c["trusted"]) for s, c in GEE_SOURCES.items()}}
 
 
 def run(batch_id):
@@ -19,8 +23,11 @@ def run(batch_id):
     if manifest.get("status") != "passed":
         raise ValueError("batch %s did not pass Validate (status=%s)" % (batch_id, manifest.get("status")))
     rules, schema = (lake.contract(n) for n in SCHEMAS[source])
-    sheet = read_workbook(lake.get_bytes(manifest["raw_key"]))[rules["data_sheet"]]
-    rows = trusted_rows(sheet, manifest, rules)
+    if source in GEE_SOURCES:
+        rows = gee.trusted_rows(lake.get_bytes(manifest["raw_key"]), manifest, GEE_SOURCES[source]["out_key"])
+    else:
+        sheet = read_workbook(lake.get_bytes(manifest["raw_key"]))[rules["data_sheet"]]
+        rows = trusted_rows(sheet, manifest, rules)
     key = lake.trusted_key(batch_id)
     lake.put_bytes(key, parquet.to_bytes(rows, schema))
     return key, len(rows)

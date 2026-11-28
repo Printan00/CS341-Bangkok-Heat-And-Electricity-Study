@@ -1,0 +1,130 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080" role="img" aria-labelledby="title description">
+<title id="title">Action: Amazon Athena ตัวอย่าง Q2</title>
+<desc id="description">ผลสำรวจ Happy Home 88 ครัวเรือน ภาระค่าไฟตามรายได้และการมีเครื่องปรับอากาศ พร้อม SQL ที่ใช้</desc>
+<rect x="0" y="0" width="1920" height="1080" rx="0" fill="#fbf9f5"/>
+<rect x="64" y="42" width="8" height="34" rx="4" fill="#a92f19"/>
+<text x="91" y="67" font-family="Tahoma, Arial, sans-serif" font-size="17" font-weight="700" fill="#625d54" text-anchor="start" letter-spacing="3">P R E S E N T  &amp;  P R O J E C T</text>
+<text x="64" y="132" font-family="Tahoma, Arial, sans-serif" font-size="49" font-weight="700" fill="#a92f19" text-anchor="start">Action: Amazon Athena ตัวอย่าง Q2</text>
+<text x="65" y="174" font-family="Tahoma, Arial, sans-serif" font-size="24" font-weight="700" fill="#242321" text-anchor="start">Q2 ภาระค่าไฟต่างกันอย่างไรตามรายได้และการมีแอร์?</text>
+<rect x="1646" y="45" width="210" height="42" rx="21" fill="#ffffff" stroke="#e5dfd5"/>
+<text x="1751" y="72" font-family="Tahoma, Arial, sans-serif" font-size="17" font-weight="700" fill="#a92f19" text-anchor="middle">Q2  ·  QUERY</text>
+<line x1="64" y1="195" x2="1856" y2="195" stroke="#e5dfd5" stroke-width="1.5"/>
+<rect x="64" y="218" width="884" height="364" rx="18" fill="#14283a"/>
+<rect x="64" y="218" width="884" height="56" rx="18" fill="#165da3"/>
+<rect x="64" y="250" width="884" height="24" rx="0" fill="#165da3"/>
+<text x="92" y="252" font-family="Tahoma, Arial, sans-serif" font-size="20" font-weight="700" fill="#ffffff" text-anchor="start">SQL  ·  services/dashboard_query/q2.sql</text>
+<text x="920" y="252" font-family="Tahoma, Arial, sans-serif" font-size="15" font-weight="400" fill="#e0ecf8" text-anchor="end">จัดกลุ่ม → นับครัวเรือน → ปกปิดค่ากลุ่มเล็ก</text>
+<text x="92" y="303.0" xml:space="preserve" font-family="Menlo, Monaco, monospace" font-size="15" fill="#ffffff">WITH survey AS (</text>
+<text x="92" y="319.5" xml:space="preserve" font-family="Menlo, Monaco, monospace" font-size="15" fill="#e0ecf8">  SELECT ... AS income, ... AS cooling, burden_class</text>
+<text x="92" y="336.0" xml:space="preserve" font-family="Menlo, Monaco, monospace" font-size="15" fill="#e0ecf8">  FROM happy_home_risk</text>
+<text x="92" y="352.5" xml:space="preserve" font-family="Menlo, Monaco, monospace" font-size="15" fill="#ffffff">), totals AS (</text>
+<text x="92" y="369.0" xml:space="preserve" font-family="Menlo, Monaco, monospace" font-size="15" fill="#e0ecf8">  SELECT ...</text>
+<text x="92" y="385.5" xml:space="preserve" font-family="Menlo, Monaco, monospace" font-size="15" fill="#e0ecf8">         count(*) AS households,</text>
+<text x="92" y="402.0" xml:space="preserve" font-family="Menlo, Monaco, monospace" font-size="15" fill="#e0ecf8">         count_if(burden_class = 'high') AS high,</text>
+<text x="92" y="418.5" xml:space="preserve" font-family="Menlo, Monaco, monospace" font-size="15" fill="#e0ecf8">         count_if(burden_class = 'possibly_high') AS possibly_high,</text>
+<text x="92" y="435.0" xml:space="preserve" font-family="Menlo, Monaco, monospace" font-size="15" fill="#e0ecf8">         count_if(burden_class = 'low') AS low, ...</text>
+<text x="92" y="451.5" xml:space="preserve" font-family="Menlo, Monaco, monospace" font-size="15" fill="#e0ecf8">  FROM survey</text>
+<text x="92" y="468.0" xml:space="preserve" font-family="Menlo, Monaco, monospace" font-size="15" fill="#e0ecf8">  GROUP BY GROUPING SETS ((income), (cooling), (income, cooling))</text>
+<text x="92" y="484.5" xml:space="preserve" font-family="Menlo, Monaco, monospace" font-size="15" fill="#ffffff">), disclosure AS (</text>
+<text x="92" y="501.0" xml:space="preserve" font-family="Menlo, Monaco, monospace" font-size="15" fill="#e0ecf8">  SELECT ... bool_or(high BETWEEN 1 AND 4 OR ...) ...</text>
+<text x="92" y="517.5" xml:space="preserve" font-family="Menlo, Monaco, monospace" font-size="15" fill="#e0ecf8">  FROM totals</text>
+<text x="92" y="534.0" xml:space="preserve" font-family="Menlo, Monaco, monospace" font-size="15" fill="#e0ecf8">)</text>
+<text x="92" y="550.5" xml:space="preserve" font-family="Menlo, Monaco, monospace" font-size="15" fill="#ffffff">SELECT ... IF(hide_size OR hide_burden, NULL, high) AS high ...</text>
+<text x="1002" y="250" font-family="Tahoma, Arial, sans-serif" font-size="24" font-weight="700" fill="#242321" text-anchor="start">สัดส่วนบ้านที่มีภาระค่าไฟสูงตามรายได้</text>
+<text x="1002" y="278" font-family="Tahoma, Arial, sans-serif" font-size="16" font-weight="400" fill="#625d54" text-anchor="start">แต่ละแท่งเทียบกับบ้านทั้งหมดในช่วงรายได้นั้น</text>
+<text x="1002" y="334" font-family="Tahoma, Arial, sans-serif" font-size="17" font-weight="700" fill="#242321" text-anchor="start">ไม่เกิน 10,000</text>
+<rect x="1200" y="320" width="510" height="16" rx="8" fill="#f0ece4"/>
+<rect x="1200" y="320" width="404.94" height="16" rx="8" fill="#17675f"/>
+<text x="1824" y="335" font-family="Tahoma, Arial, sans-serif" font-size="19" font-weight="700" fill="#17675f" text-anchor="end">79.4%</text>
+<text x="1002" y="385" font-family="Tahoma, Arial, sans-serif" font-size="17" font-weight="700" fill="#242321" text-anchor="start">10,001–20,000</text>
+<rect x="1200" y="371" width="510" height="16" rx="8" fill="#f0ece4"/>
+<rect x="1200" y="371" width="177.47999999999996" height="16" rx="8" fill="#17675f"/>
+<text x="1824" y="386" font-family="Tahoma, Arial, sans-serif" font-size="19" font-weight="700" fill="#17675f" text-anchor="end">34.8%</text>
+<text x="1002" y="436" font-family="Tahoma, Arial, sans-serif" font-size="17" font-weight="700" fill="#242321" text-anchor="start">มากกว่า 20,000</text>
+<rect x="1200" y="422" width="510" height="16" rx="8" fill="#f0ece4"/>
+<text x="1824" y="437" font-family="Tahoma, Arial, sans-serif" font-size="19" font-weight="700" fill="#17675f" text-anchor="end">0.0%</text>
+<rect x="1002" y="476" width="824" height="106" rx="12" fill="#e7f1ec"/>
+<text x="1023" y="507" font-family="Tahoma, Arial, sans-serif" font-size="17" font-weight="700" fill="#17675f" text-anchor="start">เมื่อรวมทุกช่วงรายได้</text>
+<text x="1023" y="538" font-family="Tahoma, Arial, sans-serif" font-size="23" font-weight="700" fill="#242321" text-anchor="start">ไม่มีแอร์ 40.5%   ·   มีแอร์ 39.1%</text>
+<text x="1023" y="563" font-family="Tahoma, Arial, sans-serif" font-size="15" font-weight="400" fill="#625d54" text-anchor="start">สัดส่วนภาระสูงใกล้กัน ควรพิจารณารายได้ร่วมด้วย</text>
+<text x="64" y="631" font-family="Tahoma, Arial, sans-serif" font-size="25" font-weight="700" fill="#242321" text-anchor="start">ผลลัพธ์จาก Athena</text>
+<text x="1856" y="631" font-family="Tahoma, Arial, sans-serif" font-size="16" font-weight="400" fill="#625d54" text-anchor="end">Happy Home  ·  88 ครัวเรือน  ·  เกณฑ์ภาระสูง 10% ของรายได้</text>
+<text x="79" y="677" font-family="Tahoma, Arial, sans-serif" font-size="20" font-weight="700" fill="#242321" text-anchor="start">แยกตามรายได้ (บาท/เดือน)</text>
+<rect x="64" y="692" width="620" height="40" rx="7" fill="#f0ece4"/>
+<text x="80" y="718" font-family="Tahoma, Arial, sans-serif" font-size="15" font-weight="700" fill="#625d54" text-anchor="start">กลุ่ม</text>
+<text x="318.2" y="718" font-family="Tahoma, Arial, sans-serif" font-size="15" font-weight="700" fill="#625d54" text-anchor="middle">บ้าน</text>
+<text x="414.29999999999995" y="718" font-family="Tahoma, Arial, sans-serif" font-size="15" font-weight="700" fill="#625d54" text-anchor="middle">สูง</text>
+<text x="501.09999999999997" y="718" font-family="Tahoma, Arial, sans-serif" font-size="15" font-weight="700" fill="#625d54" text-anchor="middle">อาจสูง</text>
+<text x="578.6" y="718" font-family="Tahoma, Arial, sans-serif" font-size="15" font-weight="700" fill="#625d54" text-anchor="middle">ต่ำ</text>
+<text x="646.8" y="718" font-family="Tahoma, Arial, sans-serif" font-size="15" font-weight="700" fill="#625d54" text-anchor="middle">ไม่ครบ</text>
+<rect x="64" y="740" width="620" height="42" rx="6" fill="#f5f4ee"/>
+<text x="80" y="765" font-family="Tahoma, Arial, sans-serif" font-size="16" font-weight="700" fill="#242321" text-anchor="start">ไม่เกิน 10,000</text>
+<text x="318.2" y="765" font-family="Tahoma, Arial, sans-serif" font-size="16" font-weight="400" fill="#242321" text-anchor="middle">34</text>
+<text x="414.29999999999995" y="765" font-family="Tahoma, Arial, sans-serif" font-size="16" font-weight="700" fill="#17675f" text-anchor="middle">27 (79.4%)</text>
+<text x="501.09999999999997" y="765" font-family="Tahoma, Arial, sans-serif" font-size="16" font-weight="400" fill="#242321" text-anchor="middle">7</text>
+<text x="578.6" y="765" font-family="Tahoma, Arial, sans-serif" font-size="16" font-weight="400" fill="#242321" text-anchor="middle">0</text>
+<text x="646.8" y="765" font-family="Tahoma, Arial, sans-serif" font-size="16" font-weight="400" fill="#242321" text-anchor="middle">0</text>
+<line x1="64" y1="782" x2="684" y2="782" stroke="#e5dfd5" stroke-width="1.5"/>
+<text x="80" y="811" font-family="Tahoma, Arial, sans-serif" font-size="16" font-weight="700" fill="#242321" text-anchor="start">10,001–20,000</text>
+<text x="318.2" y="811" font-family="Tahoma, Arial, sans-serif" font-size="16" font-weight="400" fill="#242321" text-anchor="middle">23</text>
+<text x="414.29999999999995" y="811" font-family="Tahoma, Arial, sans-serif" font-size="16" font-weight="700" fill="#17675f" text-anchor="middle">8 (34.8%)</text>
+<text x="501.09999999999997" y="811" font-family="Tahoma, Arial, sans-serif" font-size="16" font-weight="400" fill="#242321" text-anchor="middle">9</text>
+<text x="578.6" y="811" font-family="Tahoma, Arial, sans-serif" font-size="16" font-weight="400" fill="#242321" text-anchor="middle">6</text>
+<text x="646.8" y="811" font-family="Tahoma, Arial, sans-serif" font-size="16" font-weight="400" fill="#242321" text-anchor="middle">0</text>
+<line x1="64" y1="828" x2="684" y2="828" stroke="#e5dfd5" stroke-width="1.5"/>
+<text x="80" y="857" font-family="Tahoma, Arial, sans-serif" font-size="16" font-weight="700" fill="#242321" text-anchor="start">มากกว่า 20,000</text>
+<text x="318.2" y="857" font-family="Tahoma, Arial, sans-serif" font-size="16" font-weight="400" fill="#242321" text-anchor="middle">31</text>
+<text x="414.29999999999995" y="857" font-family="Tahoma, Arial, sans-serif" font-size="16" font-weight="700" fill="#17675f" text-anchor="middle">0 (0.0%)</text>
+<text x="501.09999999999997" y="857" font-family="Tahoma, Arial, sans-serif" font-size="16" font-weight="400" fill="#242321" text-anchor="middle">15</text>
+<text x="578.6" y="857" font-family="Tahoma, Arial, sans-serif" font-size="16" font-weight="400" fill="#242321" text-anchor="middle">16</text>
+<text x="646.8" y="857" font-family="Tahoma, Arial, sans-serif" font-size="16" font-weight="400" fill="#242321" text-anchor="middle">0</text>
+<line x1="64" y1="874" x2="684" y2="874" stroke="#e5dfd5" stroke-width="1.5"/>
+<text x="725" y="677" font-family="Tahoma, Arial, sans-serif" font-size="20" font-weight="700" fill="#242321" text-anchor="start">แยกตามการมีแอร์</text>
+<rect x="710" y="692" width="540" height="40" rx="7" fill="#f0ece4"/>
+<text x="726" y="718" font-family="Tahoma, Arial, sans-serif" font-size="15" font-weight="700" fill="#625d54" text-anchor="start">กลุ่ม</text>
+<text x="931.4" y="718" font-family="Tahoma, Arial, sans-serif" font-size="15" font-weight="700" fill="#625d54" text-anchor="middle">บ้าน</text>
+<text x="1015.0999999999999" y="718" font-family="Tahoma, Arial, sans-serif" font-size="15" font-weight="700" fill="#625d54" text-anchor="middle">สูง</text>
+<text x="1090.7" y="718" font-family="Tahoma, Arial, sans-serif" font-size="15" font-weight="700" fill="#625d54" text-anchor="middle">อาจสูง</text>
+<text x="1158.2" y="718" font-family="Tahoma, Arial, sans-serif" font-size="15" font-weight="700" fill="#625d54" text-anchor="middle">ต่ำ</text>
+<text x="1217.6" y="718" font-family="Tahoma, Arial, sans-serif" font-size="15" font-weight="700" fill="#625d54" text-anchor="middle">ไม่ครบ</text>
+<rect x="710" y="740" width="540" height="42" rx="6" fill="#f5f4ee"/>
+<text x="726" y="765" font-family="Tahoma, Arial, sans-serif" font-size="16" font-weight="700" fill="#242321" text-anchor="start">ไม่มีแอร์</text>
+<text x="931.4" y="765" font-family="Tahoma, Arial, sans-serif" font-size="16" font-weight="400" fill="#242321" text-anchor="middle">42</text>
+<text x="1015.0999999999999" y="765" font-family="Tahoma, Arial, sans-serif" font-size="16" font-weight="700" fill="#17675f" text-anchor="middle">17 (40.5%)</text>
+<text x="1090.7" y="765" font-family="Tahoma, Arial, sans-serif" font-size="16" font-weight="400" fill="#242321" text-anchor="middle">15</text>
+<text x="1158.2" y="765" font-family="Tahoma, Arial, sans-serif" font-size="16" font-weight="400" fill="#242321" text-anchor="middle">10</text>
+<text x="1217.6" y="765" font-family="Tahoma, Arial, sans-serif" font-size="16" font-weight="400" fill="#242321" text-anchor="middle">0</text>
+<line x1="710" y1="782" x2="1250" y2="782" stroke="#e5dfd5" stroke-width="1.5"/>
+<text x="726" y="811" font-family="Tahoma, Arial, sans-serif" font-size="16" font-weight="700" fill="#242321" text-anchor="start">มีแอร์</text>
+<text x="931.4" y="811" font-family="Tahoma, Arial, sans-serif" font-size="16" font-weight="400" fill="#242321" text-anchor="middle">46</text>
+<text x="1015.0999999999999" y="811" font-family="Tahoma, Arial, sans-serif" font-size="16" font-weight="700" fill="#17675f" text-anchor="middle">18 (39.1%)</text>
+<text x="1090.7" y="811" font-family="Tahoma, Arial, sans-serif" font-size="16" font-weight="400" fill="#242321" text-anchor="middle">16</text>
+<text x="1158.2" y="811" font-family="Tahoma, Arial, sans-serif" font-size="16" font-weight="400" fill="#242321" text-anchor="middle">12</text>
+<text x="1217.6" y="811" font-family="Tahoma, Arial, sans-serif" font-size="16" font-weight="400" fill="#242321" text-anchor="middle">0</text>
+<line x1="710" y1="828" x2="1250" y2="828" stroke="#e5dfd5" stroke-width="1.5"/>
+<text x="1291" y="677" font-family="Tahoma, Arial, sans-serif" font-size="20" font-weight="700" fill="#242321" text-anchor="start">รายได้ × การมีแอร์ (จำนวนบ้าน)</text>
+<rect x="1276" y="692" width="580" height="40" rx="7" fill="#f0ece4"/>
+<text x="1292" y="718" font-family="Tahoma, Arial, sans-serif" font-size="15" font-weight="700" fill="#625d54" text-anchor="start">ช่วงรายได้</text>
+<text x="1661" y="718" font-family="Tahoma, Arial, sans-serif" font-size="15" font-weight="700" fill="#625d54" text-anchor="middle">ไม่มีแอร์</text>
+<text x="1776" y="718" font-family="Tahoma, Arial, sans-serif" font-size="15" font-weight="700" fill="#625d54" text-anchor="middle">มีแอร์</text>
+<rect x="1276" y="740" width="580" height="42" rx="6" fill="#f5f4ee"/>
+<text x="1292" y="765" font-family="Tahoma, Arial, sans-serif" font-size="16" font-weight="700" fill="#242321" text-anchor="start">ไม่เกิน 10,000</text>
+<text x="1661" y="765" font-family="Tahoma, Arial, sans-serif" font-size="17" font-weight="400" fill="#242321" text-anchor="middle">20</text>
+<text x="1776" y="765" font-family="Tahoma, Arial, sans-serif" font-size="17" font-weight="400" fill="#242321" text-anchor="middle">14</text>
+<line x1="1276" y1="782" x2="1856" y2="782" stroke="#e5dfd5" stroke-width="1.5"/>
+<text x="1292" y="811" font-family="Tahoma, Arial, sans-serif" font-size="16" font-weight="700" fill="#242321" text-anchor="start">10,001–20,000</text>
+<text x="1661" y="811" font-family="Tahoma, Arial, sans-serif" font-size="17" font-weight="400" fill="#242321" text-anchor="middle">12</text>
+<text x="1776" y="811" font-family="Tahoma, Arial, sans-serif" font-size="17" font-weight="400" fill="#242321" text-anchor="middle">11</text>
+<line x1="1276" y1="828" x2="1856" y2="828" stroke="#e5dfd5" stroke-width="1.5"/>
+<text x="1292" y="857" font-family="Tahoma, Arial, sans-serif" font-size="16" font-weight="700" fill="#242321" text-anchor="start">มากกว่า 20,000</text>
+<text x="1661" y="857" font-family="Tahoma, Arial, sans-serif" font-size="17" font-weight="400" fill="#242321" text-anchor="middle">10</text>
+<text x="1776" y="857" font-family="Tahoma, Arial, sans-serif" font-size="17" font-weight="400" fill="#242321" text-anchor="middle">21</text>
+<line x1="1276" y1="874" x2="1856" y2="874" stroke="#e5dfd5" stroke-width="1.5"/>
+<text x="1291" y="908" font-family="Tahoma, Arial, sans-serif" font-size="15" font-weight="400" fill="#625d54" text-anchor="start">ปกปิดการแจกแจงระดับภาระในกลุ่มย่อย</text>
+<rect x="64" y="936" width="1792" height="62" rx="8" fill="#f0ece4"/>
+<text x="85" y="961" font-family="Tahoma, Arial, sans-serif" font-size="16" font-weight="700" fill="#242321" text-anchor="start">วิธีอ่านผล</text>
+<text x="85" y="983" font-family="Tahoma, Arial, sans-serif" font-size="16" font-weight="400" fill="#625d54" text-anchor="start">“สูง” หมายถึงขอบล่างของค่าไฟหน้าร้อนเทียบรายได้อยู่ที่อย่างน้อย 10%  ·  ร้อยละในวงเล็บใช้จำนวนบ้านทั้งหมดในกลุ่มเป็นตัวหาร</text>
+<line x1="64" y1="1030" x2="1856" y2="1030" stroke="#e5dfd5" stroke-width="1.5"/>
+<text x="64" y="1058" font-family="Tahoma, Arial, sans-serif" font-size="15" font-weight="400" fill="#625d54" text-anchor="start">แหล่งข้อมูล bhes.happy_home_risk  ·  AWS Athena  ·  ผลสรุประดับกลุ่มและเกณฑ์ปกปิดตามแดชบอร์ด</text>
+<text x="1856" y="1058" font-family="Tahoma, Arial, sans-serif" font-size="13" font-weight="700" fill="#625d54" text-anchor="end" letter-spacing="1.5">BHES  ·  ATHENA QUERY NOTE</text>
+</svg>

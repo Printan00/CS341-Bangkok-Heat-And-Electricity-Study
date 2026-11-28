@@ -7,6 +7,8 @@ Files written every run (a rerun overwrites them, so nothing stale is left):
   rows.jsonl       the quarantined rows as they came in (has coordinates: keep quarantine/ restricted)
   manifest.json    status passed/failed + every passed row's dq_flags, usable flags and community
 Rules: reports/validation_rules.md (rules live in validate/rules.py and common/contracts/happy_home.json)
+gee_lst / gee_lst_household (LST CSVs): rules G01-G10 in validate/gee_rules.py, reports/gee_lst_pipeline.md.
+gee_lst rows are communities, so its counts are not masked; gee_lst_household counts are masked like Happy Home.
 """
 import csv
 import hashlib
@@ -15,7 +17,9 @@ import json
 from datetime import datetime, timezone
 
 from common import lake
+from common.gee import SOURCES as GEE_SOURCES
 from common.xlsx import read_workbook
+from validate import gee_rules
 from validate.rules import FAIL, QUESTIONS, validate
 
 RULE_SOURCES = {"happy_home": "happy_home"}  # source -> contract name
@@ -48,13 +52,13 @@ def report(batch_id, source, raw_key, sha, errors, rows):
     }
 
 
-def violations_csv(rows):
+def violations_csv(rows, key="household_code"):
     buf = io.StringIO()
     w = csv.writer(buf)
-    w.writerow(["source_row", "household_code", "rule", "level", "message"])
+    w.writerow(["source_row", key, "rule", "level", "message"])
     for r in rows:
         for rule, level, msg in r.violations:
-            w.writerow([r.source_row, r.household_code or "", rule, level, msg])
+            w.writerow([r.source_row, getattr(r, "household_code", None) or getattr(r, "key", ""), rule, level, msg])
     return buf.getvalue().encode("utf-8-sig")  # BOM so Excel shows Thai correctly
 
 
@@ -90,12 +94,60 @@ def manifest(batch_id, source, raw_key, sha, rep, rows):
     }
 
 
+def rule_counts(rows):
+    per_rule = {}
+    for r in rows:
+        for rule, level in {(rule, level) for rule, level, _ in r.violations}:
+            per_rule.setdefault(rule, {"FAIL": 0, "WARN": 0})[level] += 1
+    return {rule: {lv: n for lv, n in v.items() if n} for rule, v in sorted(per_rule.items())}
+
+
+def run_gee(batch_id, source, raw_key, data, sha):
+    """gee_lst / gee_lst_household batch: the manifest lists the passed rows by their key."""
+    cfg = GEE_SOURCES[source]
+    plausible = lake.contract("gee_lst")["lst_plausible_c"]
+    allowed = sorted(set(lake.contract("happy_home")["community_map"].values())) if source == "gee_lst" else None
+    errors, warnings, rows = gee_rules.validate(data, lake.contract(cfg["rules"]), plausible, cfg["key"], allowed)
+    passed = [r for r in rows if not r.failed]
+    per_household = source != "gee_lst"
+    counts = rule_counts(rows)
+    if per_household:  # rows are households: mask 1-4 like the Happy Home report
+        counts = {rule: {lv: masked(n) for lv, n in v.items()} for rule, v in counts.items()}
+    rep = {
+        "batch_id": batch_id, "source": source, "raw_key": raw_key, "source_file_sha256": sha,
+        "checked_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "valid": not errors and bool(passed), "batch_errors": errors, "batch_warnings": warnings,
+        "rows_total": len(rows), "rows_passed": len(passed), "rows_quarantined": len(rows) - len(passed),
+        "rules": counts,
+        "note": "counts 1-4 are shown as <5" if per_household else "rows are communities, counts are not masked",
+    }
+    key = cfg["out_key"]
+    man = {
+        "batch_id": batch_id, "source": source, "raw_key": raw_key, "source_file_sha256": sha,
+        "status": "passed" if rep["valid"] else "failed", "rows_total": len(rows),
+        "passed": [{key: r.key, "source_row": r.source_row} for r in passed],
+        "quarantined": [{key: r.key, "source_row": r.source_row,
+                         "rules": sorted({rule for rule, lv, _ in r.violations if lv == FAIL})}
+                        for r in rows if r.failed],
+    }
+    return rep, man, rows
+
+
 def run(batch_id):
     source = lake.source_of(batch_id)
     raw_key = lake.raw_file(batch_id)
     data = lake.get_bytes(raw_key)
     sha = hashlib.sha256(data).hexdigest()
 
+    if source in GEE_SOURCES:
+        rep, man, rows = run_gee(batch_id, source, raw_key, data, sha)
+        q = lake.quarantine_prefix(batch_id)
+        lake.put_json(q + "dq_report.json", rep)
+        lake.put_bytes(q + "violations.csv", violations_csv(rows, GEE_SOURCES[source]["key"]),
+                       "text/csv; charset=utf-8")
+        lake.put_bytes(q + "rows.jsonl", quarantined_jsonl(rows), "application/x-ndjson")
+        lake.put_json(q + "manifest.json", man)
+        return rep
     if source not in RULE_SOURCES:
         errors, rows = ["ยังไม่มีกฎตรวจของ %s (สเปกตอนนี้ครอบคลุมเฉพาะ Happy Home) จึงไม่ส่งต่อ" % source], []
     else:

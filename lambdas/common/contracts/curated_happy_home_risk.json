@@ -1,0 +1,165 @@
+{
+ "_meta": {
+  "table": "curated/happy_home_risk/part-0.parquet",
+  "spec": "reports/risk_score_formulas.md (D8-D20, all confirmed 2026-11-19)",
+  "privacy": "allowlist: only these columns are written; no coordinates, names, interviewer codes or free text"
+ },
+ "forbidden_columns": [
+  "latitude",
+  "longitude",
+  "lat",
+  "lon",
+  "grid_id",
+  "interviewer_code",
+  "ชื่อชุมชน",
+  "_พิกัดครัวเรือน (ปักหมุด)_latitude",
+  "_พิกัดครัวเรือน (ปักหมุด)_longitude",
+  "ชื่อชุมชน"
+ ],
+ "columns": [
+  {
+   "name": "household_code",
+   "type": "string",
+   "nullable": false,
+   "description": "pseudonymous household id from the export (HMAC), never the real id"
+  },
+  {
+   "name": "heat_risk",
+   "type": "float64",
+   "nullable": true,
+   "description": "group 1 heat impact 0-1: mean of C2.1, C2.5 symptoms, D1.1, D2.1, D2.2, A13 (higher = riskier)"
+  },
+  {
+   "name": "housing_risk",
+   "type": "float64",
+   "nullable": true,
+   "description": "group 2 housing 0-1: mean of the answered items of B4, B6, B7, B8, B9 (at least 4)"
+  },
+  {
+   "name": "finance_risk",
+   "type": "float64",
+   "nullable": true,
+   "description": "group 3 financial stability 0-1: mean of the answered items of A6, A11, A10, A8 above A7 (at least 3)"
+  },
+  {
+   "name": "burden_risk",
+   "type": "float64",
+   "nullable": true,
+   "description": "group 4 energy burden 0-1: geometric middle of the burden range divided by the 20% cap, at most 1"
+  },
+  {
+   "name": "coping_risk",
+   "type": "float64",
+   "nullable": true,
+   "description": "group 5 coping 0-1: mean of the answered items of A14, B12, G8 (at least 2)"
+  },
+  {
+   "name": "burden_min",
+   "type": "float64",
+   "nullable": true,
+   "description": "T07 summer bill_min / income_max"
+  },
+  {
+   "name": "burden_max",
+   "type": "float64",
+   "nullable": true,
+   "description": "T07 summer bill_max / income_min"
+  },
+  {
+   "name": "income_group",
+   "type": "string",
+   "nullable": true,
+   "description": "T06 A7 income in three groups from income_ord (1-2, 3, 4-5), numbered so they sort (Q2)"
+  },
+  {
+   "name": "burden_class",
+   "type": "string",
+   "nullable": true,
+   "description": "T07 high / possibly_high / low at 10% (D2)"
+  },
+  {
+   "name": "has_aircon",
+   "type": "bool",
+   "nullable": true,
+   "description": "T08 E2.1 owns an air conditioner"
+  },
+  {
+   "name": "exposure",
+   "type": "float64",
+   "nullable": true,
+   "description": "axis 0-1: mean of heat_risk, housing_risk and lst_hh_score (D27); heat_risk and housing_risk are required, LST is added when present"
+  },
+  {
+   "name": "vulnerability",
+   "type": "float64",
+   "nullable": true,
+   "description": "axis 0-1: mean of finance_risk, burden_risk and coping_risk"
+  },
+  {
+   "name": "risk_score",
+   "type": "float64",
+   "nullable": true,
+   "description": "0-100: 100 x the mean of the five survey groups and lst_hh_score (equal weights, D27); without LST the mean of the five (D28); null when any survey group is null"
+  },
+  {
+   "name": "risk_rank",
+   "type": "int32",
+   "nullable": true,
+   "description": "1 = riskiest; equal scores share a rank; null when risk_score is null"
+  },
+  {
+   "name": "risk_quadrant",
+   "type": "string",
+   "nullable": true,
+   "description": "help_first / watch / low_heat_limited / low_heat_coping: exposure and vulnerability each cut at 0.5"
+  },
+  {
+   "name": "lst_mean_c",
+   "type": "float64",
+   "nullable": true,
+   "description": "community LST (deg C) from curated/community_dim for the household's community_key; null when the community is unknown or has no LST"
+  },
+  {
+   "name": "lst_score",
+   "type": "float64",
+   "nullable": true,
+   "description": "lst_mean_c on the fixed 30-45 deg C range -> 0-1; community context only, NOT part of risk_score (D27 uses the household value)"
+  },
+  {
+   "name": "lst_batch_id",
+   "type": "string",
+   "nullable": true,
+   "description": "gee_lst batch the LST came from (lineage); null when no LST was joined"
+  },
+  {
+   "name": "lst_hh_c",
+   "type": "float64",
+   "nullable": true,
+   "description": "household LST (deg C) from curated/household_lst (50 m around the household point); null when the household has no usable coordinates or no clear pixel"
+  },
+  {
+   "name": "lst_hh_score",
+   "type": "float64",
+   "nullable": true,
+   "description": "lst_hh_c on the fixed 30-45 deg C range -> 0-1; the sixth part of risk_score and of the exposure axis (D27)"
+  },
+  {
+   "name": "lst_hh_batch_id",
+   "type": "string",
+   "nullable": true,
+   "description": "gee_lst_household batch the LST came from (lineage); null when no LST was joined"
+  },
+  {
+   "name": "batch_id",
+   "type": "string",
+   "nullable": false,
+   "description": "T12 lineage: ingest batch id"
+  },
+  {
+   "name": "source_row",
+   "type": "int32",
+   "nullable": false,
+   "description": "T12 lineage: row number in the raw sheet"
+  }
+ ]
+}

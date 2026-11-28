@@ -1,12 +1,16 @@
 """S3 data-lake helpers shared by the pipeline Lambdas.
 
 Layout for one batch (batch_id = <source>-<sha256[:12]>, written by scripts/ingest.py):
-  raw/<source>/<batch_id>/<file>.xlsx                       original file (read-only for Lambdas)
+  raw/<source>/<batch_id>/<file>.xlsx|.csv                  original file (read-only for Lambdas)
   quarantine/<source>/<batch_id>/                           Validate: report, violations, quarantined rows, manifest
   trusted/<source>/batch_id=<batch_id>/part-0.parquet       Transform: checked rows, no coordinates/names
   curated/_pipeline/staging/<batch_id>/<table>.parquet      Integrate: analysis table waiting for Verify
   curated/<table>/part-0.parquet                            Verify: published table (latest batch replaces old)
   curated/_pipeline/success/<batch_id>/_SUCCESS.json        Verify: written only when every check passes
+
+Sources: happy_home (survey, one row per household), gee_lst (Landsat LST, one row per community) and
+gee_lst_household (Landsat LST, one row per household). gee_lst publishes curated/community_dim/ and
+gee_lst_household publishes curated/household_lst/; the Happy Home Integrate step joins both into happy_home_risk.
 """
 import json
 import os
@@ -66,14 +70,21 @@ def list_keys(prefix):
             return keys
 
 
+RAW_EXTENSIONS = {"gee_lst": ".csv", "gee_lst_household": ".csv"}  # every other source is one .xlsx survey export
+
+
 def raw_file(batch_id):
-    """The one .xlsx of a batch under raw/<source>/<batch_id>/ (ingest writes exactly one)."""
+    """The one data file of a batch under raw/<source>/<batch_id>/ (ingest writes exactly one).
+
+    Survey sources are .xlsx; gee_lst is the community CSV written locally by scripts/gee_lst.py.
+    """
+    ext = RAW_EXTENSIONS.get(source_of(batch_id), ".xlsx")
     prefix = "raw/%s/%s/" % (source_of(batch_id), batch_id)
-    files = [k for k in list_keys(prefix) if k.lower().endswith(".xlsx")]
+    files = [k for k in list_keys(prefix) if k.lower().endswith(ext)]
     if not files:
-        raise FileNotFoundError("no .xlsx under s3://%s/%s (run scripts/ingest.py first)" % (bucket(), prefix))
+        raise FileNotFoundError("no %s under s3://%s/%s (run scripts/ingest.py first)" % (ext, bucket(), prefix))
     if len(files) > 1:
-        raise ValueError("expected one .xlsx under %s, found %d" % (prefix, len(files)))
+        raise ValueError("expected one %s under %s, found %d" % (ext, prefix, len(files)))
     return files[0]
 
 

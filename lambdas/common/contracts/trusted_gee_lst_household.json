@@ -1,0 +1,75 @@
+{
+ "_meta": {
+  "table": "trusted/gee_lst_household/batch_id=<id>/part-0.parquet",
+  "privacy": "allowlist: one row per household, pseudonymous household_code only, no coordinates or community name"
+ },
+ "forbidden_columns": [
+  "latitude",
+  "longitude",
+  "lat",
+  "lon",
+  "centre_lat",
+  "centre_lon",
+  "geometry",
+  "_พิกัดครัวเรือน (ปักหมุด)_latitude",
+  "_พิกัดครัวเรือน (ปักหมุด)_longitude",
+  "community",
+  "ชื่อชุมชน"
+ ],
+ "columns": [
+  {
+   "name": "household_code",
+   "type": "string",
+   "nullable": false,
+   "description": "pseudonymous household id, same values as household_code in trusted_happy_home (join key)"
+  },
+  {
+   "name": "lst_mean_c",
+   "type": "float64",
+   "nullable": false,
+   "description": "mean Landsat 8/9 LST (deg C, rounded to 0.1) of the clear pixels within buffer_m of the household point, over the period"
+  },
+  {
+   "name": "n_scenes",
+   "type": "int32",
+   "nullable": false,
+   "description": "Landsat scenes covering the buffer in the period (not the number of cloud-free scenes)"
+  },
+  {
+   "name": "period_start",
+   "type": "string",
+   "nullable": false,
+   "description": "first day of the image period, YYYY-MM-DD"
+  },
+  {
+   "name": "period_end",
+   "type": "string",
+   "nullable": false,
+   "description": "end of the image period, YYYY-MM-DD (Earth Engine filterDate: exclusive)"
+  },
+  {
+   "name": "buffer_m",
+   "type": "float64",
+   "nullable": false,
+   "description": "radius (m) around the household point that was averaged"
+  },
+  {
+   "name": "lst_source",
+   "type": "string",
+   "nullable": false,
+   "description": "image product and band, e.g. landsat8/9_c02_l2_ST_B10"
+  },
+  {
+   "name": "batch_id",
+   "type": "string",
+   "nullable": false,
+   "description": "batch the row came from (lineage)"
+  },
+  {
+   "name": "source_row",
+   "type": "int32",
+   "nullable": false,
+   "description": "row number in the raw CSV, header = 1 (lineage)"
+  }
+ ]
+}
