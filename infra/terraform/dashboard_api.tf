@@ -175,3 +175,45 @@ output "dashboard_q1_api_url" {
 output "dashboard_q1_invoke_arn" {
   value = "${aws_apigatewayv2_api.dashboard.execution_arn}/$default/GET/dashboard/q1"
 }
+
+resource "aws_apigatewayv2_route" "dashboard_q2" {
+  api_id             = aws_apigatewayv2_api.dashboard.id
+  route_key          = "GET /dashboard/q2"
+  target             = "integrations/${aws_apigatewayv2_integration.dashboard_q3.id}"
+  authorization_type = "AWS_IAM"
+}
+
+resource "aws_lambda_permission" "dashboard_q2" {
+  statement_id  = "AllowGatewayQ2"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.dashboard_query.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_apigatewayv2_api.dashboard.execution_arn}/$default/GET/dashboard/q2"
+}
+
+output "dashboard_q2_api_url" {
+  value = "${aws_apigatewayv2_api.dashboard.api_endpoint}/dashboard/q2"
+}
+
+output "dashboard_q2_invoke_arn" {
+  value = "${aws_apigatewayv2_api.dashboard.execution_arn}/$default/GET/dashboard/q2"
+}
+
+resource "aws_apigatewayv2_route" "dashboard_q2_households" {
+  api_id             = aws_apigatewayv2_api.dashboard.id
+  route_key          = "GET /dashboard/q2/households"
+  target             = "integrations/${aws_apigatewayv2_integration.dashboard_q3.id}"
+  authorization_type = "AWS_IAM"
+}
+
+resource "aws_lambda_permission" "dashboard_q2_households" {
+  statement_id  = "AllowGatewayQ2Households"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.dashboard_query.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_apigatewayv2_api.dashboard.execution_arn}/$default/GET/dashboard/q2/households"
+}
+
+output "dashboard_q2_households_invoke_arn" {
+  value = "${aws_apigatewayv2_api.dashboard.execution_arn}/$default/GET/dashboard/q2/households"
+}

@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { Suspense } from "react";
 import { getQ3Data } from "../lib/q3-data";
 import { Q3Table } from "./q3-table";
@@ -22,7 +21,7 @@ async function Q3Results() {
       {priority?.households != null && (
         <p className="mb-3 rounded-panel bg-olive-soft p-3 text-sm"><strong className="text-olive">{priority.households} ครัวเรือนอยู่ในกลุ่มช่วยก่อน</strong> เพราะเผชิญความร้อนและมีความเปราะบางสูงตามเกณฑ์ของโครงการ</p>
       )}
-      <Q3Table rows={data.rows} />
+      <Q3Table rows={data.rows} labelledBy="priority-title" />
     </>
   );
 }
@@ -31,9 +30,6 @@ export function Q3Section() {
   return (
     <section id="priority" aria-labelledby="priority-title">
       <h2 id="priority-title" className="mb-2 section-title">สรุปคะแนนเฉลี่ยตามกลุ่ม</h2>
-      {process.env.NODE_ENV === "development" && process.env.Q3_INTERNAL_VIEW === "1" && (
-        <Link className="mb-2 inline-block text-sm font-medium text-heat underline" href="/internal/q3" prefetch={false}>เปิดตารางรายครัวเรือนสำหรับตรวจข้อมูล</Link>
-      )}
       <Suspense fallback={<DashboardStatus>กำลังโหลดผลสรุปจาก Athena</DashboardStatus>}>
         <Q3Results />
       </Suspense>

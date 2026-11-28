@@ -1,38 +1,36 @@
-import { headers } from "next/headers";
-import Link from "next/link";
-import { notFound } from "next/navigation";
-import { fetchQ3 } from "../../../lib/q3-data";
-import { HouseholdTable, type HouseholdData } from "./table";
-import { DashboardHeading, DashboardStatus } from "../../dashboard-ui";
+import { Suspense } from "react";
+import { canViewHouseholdDetails } from "../../lib/household-view";
+import { fetchQ3 } from "../../lib/q3-data";
+import { DashboardStatus } from "../dashboard-ui";
+import { HouseholdTable, type HouseholdData } from "../household-table";
 
-export default async function InternalQ3Page() {
-  if (process.env.NODE_ENV !== "development" || process.env.Q3_INTERNAL_VIEW !== "1" || process.env.VERCEL) {
-    notFound();
-  }
-  const host = (await headers()).get("host");
-  if (!host || !/^(?:localhost|127\.0\.0\.1):\d+$/.test(host)) notFound();
-
-  let data: HouseholdData | undefined;
+async function HouseholdResults() {
   const endpoint = process.env.Q3_API_URL;
-  if (endpoint) {
-    try {
-      const payload = await fetchQ3(endpoint, true);
-      if (!payload || typeof payload !== "object" ||
-          !("columns" in payload) || !Array.isArray(payload.columns) ||
-          !("rows" in payload) || !Array.isArray(payload.rows)) {
-        throw new Error("Unexpected household response");
-      }
-      data = { columns: payload.columns, rows: payload.rows };
-    } catch (error) {
-      console.error("Internal Q3 request failed", error instanceof Error ? error.message : "Unknown error");
+  if (!endpoint) return <DashboardStatus>ยังไม่ได้ตั้งค่า Q3_API_URL สำหรับตารางรายครัวเรือน</DashboardStatus>;
+
+  let data: HouseholdData;
+  try {
+    const payload = await fetchQ3(endpoint, true);
+    if (!payload || typeof payload !== "object" ||
+        !("columns" in payload) || !Array.isArray(payload.columns) ||
+        !("rows" in payload) || !Array.isArray(payload.rows)) {
+      throw new Error("Unexpected household response");
     }
+    data = { columns: payload.columns, rows: payload.rows };
+  } catch (error) {
+    console.error("Q3 household request failed", error instanceof Error ? error.message : "Unknown error");
+    return <DashboardStatus>ดึงข้อมูลรายครัวเรือนไม่สำเร็จ กรุณาตรวจสิทธิ์ AWS ของโปรไฟล์ที่กำลังใช้</DashboardStatus>;
   }
+  return <HouseholdTable {...data} />;
+}
+
+export async function Q3HouseholdSection() {
+  if (!await canViewHouseholdDetails()) return null;
 
   return (
-    <>
-      <DashboardHeading question="Q3" title="ตารางรายครัวเรือน"
-        description="มุมมองตรวจข้อมูลภายใน · เริ่มจากลำดับความเสี่ยงสูงสุด · กดหัวคอลัมน์เพื่อเรียงข้อมูล" />
-      <Link href="/q3" className="mb-3 inline-block text-sm font-medium text-heat underline">กลับไปหน้าสรุป Q3</Link>
+    <section className="mt-6" aria-labelledby="q3-household-title">
+      <h2 id="q3-household-title" className="mb-2 section-title">ตารางรายครัวเรือน</h2>
+      <p className="mb-3 text-sm text-muted">เรียงจากความเสี่ยงสูงสุด กดหัวคอลัมน์เพื่อเปลี่ยนลำดับ</p>
       <details className="panel mb-3 px-3 py-2 text-sm">
         <summary className="cursor-pointer font-semibold">วิธีอ่านคะแนนและลำดับ</summary>
         <dl className="mt-2 space-y-2 text-muted">
@@ -42,7 +40,9 @@ export default async function InternalQ3Page() {
           <div><dt className="font-semibold text-ink">LST และที่มาของข้อมูล</dt><dd>lst_mean_c คืออุณหภูมิพื้นผิวระดับชุมชน และ lst_hh_c คือค่าระดับครัวเรือน หน่วย °C ช่องขีดหมายถึงไม่มีค่า คอลัมน์ batch_id และ source_row ใช้ตรวจที่มาของแถว</dd></div>
         </dl>
       </details>
-      {data ? <HouseholdTable {...data} /> : <DashboardStatus>ดึงข้อมูล S3 ไม่สำเร็จ กรุณาตรวจสิทธิ์ AWS ของโปรไฟล์ที่กำลังใช้</DashboardStatus>}
-    </>
+      <Suspense fallback={<DashboardStatus>กำลังโหลดข้อมูลรายครัวเรือน</DashboardStatus>}>
+        <HouseholdResults />
+      </Suspense>
+    </section>
   );
 }

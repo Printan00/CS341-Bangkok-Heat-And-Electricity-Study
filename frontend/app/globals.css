@@ -46,23 +46,4 @@
     @apply absolute top-2 right-2 grid size-7 place-items-center rounded-lg compact:right-3;
   }
   .question-icon { @apply inline-flex shrink-0 items-center justify-center gap-1 rounded-md px-[7px] py-1 text-[11px] font-bold tracking-wide; }
-  .takeaway { @apply mt-auto flex items-start gap-1.5 rounded-lg px-2 py-1.5 text-[13px] leading-[1.42]; }
-  .takeaway svg { @apply shrink-0; }
-
-  .chart-row, .chart-axis {
-    @apply grid grid-cols-[clamp(92px,22cqi,100px)_minmax(0,1fr)_32px] items-center gap-1.5;
-  }
-  .bar-track {
-    @apply relative block h-full border-x border-[#eeeae2] border-l-[#d5cec4];
-    background-image: linear-gradient(to right, #eeeae2 1px, transparent 1px);
-    background-size: 25% 100%;
-  }
-  .bar {
-    @apply absolute top-1/2 block h-3 -translate-y-1/2 rounded-r-[3px] transition-[width] duration-200 motion-reduce:transition-none;
-    width: var(--bar-width);
-  }
-  .bar-value {
-    @apply absolute top-1/2 -translate-y-1/2 text-[13px] leading-none font-bold tabular-nums;
-    left: calc(var(--bar-width) + 7px);
-  }
 }

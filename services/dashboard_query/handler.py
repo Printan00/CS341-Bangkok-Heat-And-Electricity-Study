@@ -8,6 +8,7 @@ from pathlib import Path
 
 import boto3
 import q1
+import q2
 from botocore.config import Config
 from botocore.exceptions import BotoCoreError, ClientError
 
@@ -68,11 +69,15 @@ def handler(event, context):
             from households import read_households
 
             return response(200, read_households())
+        if route == "GET /dashboard/q2/households":
+            from households import Q2_COLUMNS, read_households
 
-        q1_request = route == "GET /dashboard/q1"
+            return response(200, read_households(Q2_COLUMNS))
+
+        query = {"GET /dashboard/q1": q1, "GET /dashboard/q2": q2}.get(route)
         deadline = time.monotonic() + min(16, context.get_remaining_time_in_millis() / 1000 - 4)
         query_id = ATHENA.start_query_execution(
-            QueryString=q1.SQL if q1_request else SQL,
+            QueryString=query.SQL if query else SQL,
             WorkGroup=os.environ["ATHENA_WORKGROUP"],
             QueryExecutionContext={"Database": os.environ["ATHENA_DATABASE"]},
             ResultReuseConfiguration={"ResultReuseByAgeConfiguration": {"Enabled": True, "MaxAgeInMinutes": 5}},
@@ -81,8 +86,8 @@ def handler(event, context):
         while time.monotonic() < deadline:
             status = ATHENA.get_query_execution(QueryExecutionId=query_id)["QueryExecution"]["Status"]["State"]
             if status == "SUCCEEDED":
-                if q1_request:
-                    return response(200, q1.payload(read_rows(query_id, q1.COLUMNS, 100)))
+                if query:
+                    return response(200, query.payload(read_rows(query_id, query.COLUMNS, 100)))
                 return response(200, {"scoreVersion": "D27/D28", "threshold": 0.5, "rows": fetch_summary(query_id)})
             if status in {"FAILED", "CANCELLED"}:
                 LOGGER.warning("Dashboard Athena query %s ended with %s", query_id, status)
