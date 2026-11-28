@@ -45,9 +45,7 @@
 
 ## รันแดชบอร์ด
 
-### ดูผลจากไฟล์ที่มีใน repo
-
-เปิด [`dashboard/index.html`](dashboard/index.html) ในเบราว์เซอร์ได้เลย หน้านี้สร้างจาก CSV ผล Athena ที่บันทึกไว้ เหมาะกับการเปิดสาธิตโดยไม่ต้องตั้งค่า AWS
+ดูเวอร์ชันที่ deploy แล้วได้ที่ [frontend-kappa-topaz-59.vercel.app](https://frontend-kappa-topaz-59.vercel.app) ไม่ต้องตั้งค่าอะไร ส่วนวิธีรันบนเครื่องอยู่ด้านล่าง
 
 ### รัน Next.js ด้วยข้อมูล AWS
 
@@ -73,7 +71,7 @@ npm run dev
 
 | ตำแหน่ง | สิ่งที่อยู่ข้างใน |
 | --- | --- |
-| [`frontend/`](frontend/) · [`dashboard/`](dashboard/) | Next.js ที่อ่านข้อมูล AWS และแดชบอร์ด HTML ที่สร้างจาก CSV ส่วนวิธีคำนวณอยู่ใน `frontend/app/q*/method.tsx` |
+| [`frontend/`](frontend/) | แดชบอร์ด Next.js ที่อ่านข้อมูล AWS ส่วนวิธีคำนวณท้ายแต่ละหน้าอยู่ใน `frontend/app/q*/method.tsx` |
 | [`services/dashboard_query/`](services/dashboard_query/) | API handler, SQL ของแดชบอร์ด และการอ่านคอลัมน์รายครัวเรือนจาก S3 |
 | [`scripts/`](scripts/) · [`lambdas/`](lambdas/) | Ingest, ตรวจ codebook, ดึง LST และประมวลผลแต่ละ batch ตาม [schema contracts](lambdas/common/contracts/) |
 | [`infra/terraform/`](infra/terraform/) | ทรัพยากร AWS, IAM, Step Functions และ API Gateway |
